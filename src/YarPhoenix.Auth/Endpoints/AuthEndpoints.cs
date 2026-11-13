@@ -30,7 +30,7 @@ public static class AuthEndpoints
 
             var result = await auth.RegisterAsync(request, cancellationToken);
             return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
-        });
+        }).Produces<RegisterResponse>();
 
         group.MapPost("/login", async (
             LoginRequest request,
@@ -39,7 +39,7 @@ public static class AuthEndpoints
         {
             var result = await auth.LoginAsync(request, cancellationToken);
             return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
-        });
+        }).Produces<TokenResponse>();
 
         group.MapPost("/refresh", async (
             RefreshRequest request,
@@ -48,7 +48,7 @@ public static class AuthEndpoints
         {
             var result = await auth.RefreshAsync(request.RefreshToken, cancellationToken);
             return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
-        });
+        }).Produces<TokenResponse>();
 
         group.MapPost("/logout", async (
             LogoutRequest request,
@@ -57,7 +57,7 @@ public static class AuthEndpoints
         {
             await auth.LogoutAsync(request.RefreshToken, cancellationToken);
             return Results.NoContent();
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPost("/confirm-email", async (
             ConfirmEmailRequest request,
@@ -95,7 +95,7 @@ public static class AuthEndpoints
         {
             var result = await auth.ChangePasswordAsync(GetUserId(principal), request, cancellationToken);
             return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
-        }).RequireAuthorization();
+        }).RequireAuthorization().Produces<TokenResponse>();
 
         group.MapPost("/change-email", async (
             ChangeEmailRequest request,
@@ -124,13 +124,13 @@ public static class AuthEndpoints
         {
             var result = await auth.DeleteAccountAsync(GetUserId(principal), request, cancellationToken);
             return result.IsSuccess ? Results.NoContent() : ToErrorResult(result.Error);
-        }).RequireAuthorization();
+        }).RequireAuthorization().Produces(StatusCodes.Status204NoContent);
 
         group.MapGet("/me", async (ClaimsPrincipal principal, AuthService auth) =>
         {
             var result = await auth.GetProfileAsync(GetUserId(principal));
             return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
-        }).RequireAuthorization();
+        }).RequireAuthorization().Produces<UserResponse>();
 
         group.MapPut("/profile", async (
             UpdateProfileRequest request,
@@ -139,7 +139,7 @@ public static class AuthEndpoints
         {
             var result = await auth.UpdateProfileAsync(GetUserId(principal), request);
             return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
-        }).RequireAuthorization();
+        }).RequireAuthorization().Produces<UserResponse>();
 
         group.MapPost("/avatar", async (
             IFormFile file,
@@ -161,7 +161,7 @@ public static class AuthEndpoints
             var result = await auth.UpdateAvatarAsync(
                 GetUserId(principal), content, file.Length, file.ContentType, cancellationToken);
             return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
-        }).RequireAuthorization().DisableAntiforgery();
+        }).RequireAuthorization().DisableAntiforgery().Produces<UserResponse>();
 
         group.MapDelete("/avatar", async (
             ClaimsPrincipal principal,
@@ -170,7 +170,7 @@ public static class AuthEndpoints
         {
             var result = await auth.RemoveAvatarAsync(GetUserId(principal), cancellationToken);
             return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
-        }).RequireAuthorization();
+        }).RequireAuthorization().Produces<UserResponse>();
 
         return app;
     }

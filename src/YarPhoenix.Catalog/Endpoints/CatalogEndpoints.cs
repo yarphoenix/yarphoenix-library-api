@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using YarPhoenix.Catalog.Application;
+using YarPhoenix.Catalog.Contracts;
 using YarPhoenix.Catalog.Infrastructure.OpenLibrary;
 
 namespace YarPhoenix.Catalog.Endpoints;
@@ -34,7 +35,7 @@ public static class CatalogEndpoints
             return result.IsSuccess
                 ? Results.Ok(result.Value)
                 : Results.Problem(title: result.Error.Message, statusCode: StatusCodes.Status503ServiceUnavailable);
-        });
+        }).Produces<BookListResponse>().ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         group.MapGet("/books/{provider}/{externalId}", async (
             string provider,
@@ -58,7 +59,10 @@ public static class CatalogEndpoints
             return result.Error.Code == "not_found"
                 ? Results.NotFound()
                 : Results.Problem(title: result.Error.Message, statusCode: StatusCodes.Status503ServiceUnavailable);
-        });
+        })
+            .Produces<BookDetailsResponse>()
+            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         return app;
     }

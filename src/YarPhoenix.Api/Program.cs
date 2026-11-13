@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using YarPhoenix.Ai;
 using YarPhoenix.Ai.Endpoints;
@@ -24,6 +25,18 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddProblemDetails();
+
+// Числа в JSON — только числами. Web-дефолт допускает и строки ("42"), из-за чего OpenAPI
+// описывает каждое числовое поле как «число или строка» и типы фронтенда расплываются.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
+
+// Некорректное тело запроса — это 400 в любом окружении. По умолчанию в Development минимальные
+// API бросают исключение (и оно уходит в 500), а в Production молча отвечают 400.
+builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = false);
+
+// OpenAPI-документ — источник типов для фронтенда (`npm run gen:api`); отдаётся только в Development.
+builder.Services.AddOpenApi();
 
 builder.Services.AddCatalogModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
@@ -60,6 +73,11 @@ app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
 
 app.MapHealthChecks("/health");
 app.MapCatalogEndpoints();

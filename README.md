@@ -72,7 +72,9 @@ Refresh-токены хранятся только как SHA-256 хэш, рот
 ## Стек
 
 C#, ASP.NET Core, EF Core + PostgreSQL, MinIO, Claude API. Clean Architecture внутри
-модулей, Result-паттерн. Кэш — HybridCache. Тесты — xUnit.
+модулей, Result-паттерн. Кэш — HybridCache. Тесты — xUnit. OpenAPI-документ
+(`/openapi/v1.json`, только в Development) — источник типов для фронтенда: его TypeScript-типы
+генерируются из схемы, а не пишутся руками.
 
 ## Локальный запуск
 

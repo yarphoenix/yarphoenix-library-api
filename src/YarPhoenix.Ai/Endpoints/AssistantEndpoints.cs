@@ -48,7 +48,7 @@ public static class AssistantEndpoints
             // Всегда 200: деградация — в payload (Available=false), не в статусе (§8.3).
             var response = await assistant.AskAsync(effective, cancellationToken);
             return Results.Ok(response);
-        }).RequireAuthorization();
+        }).RequireAuthorization().Produces<AssistantResponse>();
 
         return app;
     }

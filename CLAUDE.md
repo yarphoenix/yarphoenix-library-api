@@ -36,6 +36,17 @@ dotnet run --project src/YarPhoenix.Api         # http://127.0.0.1:5080, миг�
 dotnet ef migrations add <Name> --project src/YarPhoenix.Auth --startup-project src/YarPhoenix.Api
 ```
 
+## Контракт с фронтендом (OpenAPI)
+
+- В Development API отдаёт документ `http://127.0.0.1:5080/openapi/v1.json` (в Production — нет).
+  Из него фронтенд генерирует типы: `npm run gen:api` в репозитории фронтенда.
+- **У каждого эндпоинта с телом ответа обязателен `.Produces<T>()`** (для 204/404 — `.Produces(код)`):
+  лямбды возвращают `IResult`, и без метаданных тип ответа в схему не попадёт.
+- После изменения контрактов (`*Contracts.cs`, маршруты, параметры) — перегенерировать типы на фронтенде
+  и закоммитить `schema.d.ts` вместе с изменением.
+- Числа в JSON — строго числами (`JsonNumberHandling.Strict` в `Program.cs`): иначе схема описывает
+  каждое числовое поле как «число или строка».
+
 ## Локальное окружение и сеть (важно)
 
 - **Postgres контейнера — на 127.0.0.1:5433** (не 5432: на машине живёт нативный виндовый Postgres).

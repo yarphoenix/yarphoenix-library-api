@@ -21,7 +21,8 @@ public static class LibraryEndpoints
             LibraryService library,
             CancellationToken cancellationToken,
             string shelf = "all") =>
-            Results.Ok(await library.GetShelfAsync(principal.GetUserId(), shelf, cancellationToken)));
+            Results.Ok(await library.GetShelfAsync(principal.GetUserId(), shelf, cancellationToken)))
+            .Produces<IReadOnlyList<LibraryBookResponse>>();
 
         group.MapPost("/books", async (
             AddToLibraryRequest request,
@@ -31,7 +32,7 @@ public static class LibraryEndpoints
         {
             var result = await library.AddExternalAsync(principal.GetUserId(), request, cancellationToken);
             return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
-        });
+        }).Produces<LibraryBookResponse>();
 
         group.MapPost("/books/read", async (
             StartReadingRequest request,
@@ -42,7 +43,7 @@ public static class LibraryEndpoints
             var result = await library.EnsureReadableAsync(
                 principal.GetUserId(), request, cancellationToken);
             return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
-        });
+        }).Produces<LibraryBookResponse>();
 
         group.MapGet("/books/lookup", async (
             string provider,
@@ -54,7 +55,7 @@ public static class LibraryEndpoints
             var response = await library.LookupAsync(
                 principal.GetUserId(), provider, externalId, cancellationToken);
             return response is null ? Results.NotFound() : Results.Ok(response);
-        });
+        }).Produces<LibraryBookResponse>().Produces(StatusCodes.Status404NotFound);
 
         group.MapGet("/books/{bookId:guid}", async (
             Guid bookId,
@@ -64,7 +65,7 @@ public static class LibraryEndpoints
         {
             var result = await library.GetOneAsync(principal.GetUserId(), bookId, cancellationToken);
             return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
-        });
+        }).Produces<LibraryBookResponse>();
 
         group.MapPatch("/books/{bookId:guid}", async (
             Guid bookId,
@@ -76,7 +77,7 @@ public static class LibraryEndpoints
             var result = await library.UpdateShelfAsync(
                 principal.GetUserId(), bookId, request, cancellationToken);
             return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
-        });
+        }).Produces<LibraryBookResponse>();
 
         group.MapDelete("/books/{bookId:guid}", async (
             Guid bookId,
@@ -86,7 +87,7 @@ public static class LibraryEndpoints
         {
             var result = await library.RemoveAsync(principal.GetUserId(), bookId, cancellationToken);
             return result.IsSuccess ? Results.NoContent() : ToErrorResult(result.Error);
-        });
+        }).Produces(StatusCodes.Status204NoContent);
 
         group.MapPut("/books/{bookId:guid}/progress", async (
             Guid bookId,
@@ -98,7 +99,7 @@ public static class LibraryEndpoints
             var result = await library.UpdateProgressAsync(
                 principal.GetUserId(), bookId, request, cancellationToken);
             return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
-        });
+        }).Produces<LibraryBookResponse>();
 
         group.MapPost("/upload", async (
             IFormFile file,
@@ -125,7 +126,7 @@ public static class LibraryEndpoints
             // Ответ мгновенный; парсинг OPF и матчинг — в фоне (§5.4).
             await queue.EnqueueAsync(response.BookId, cancellationToken);
             return Results.Ok(response);
-        }).DisableAntiforgery();
+        }).DisableAntiforgery().Produces<LibraryBookResponse>();
 
         group.MapGet("/books/{bookId:guid}/file", async (
             Guid bookId,
@@ -142,14 +143,15 @@ public static class LibraryEndpoints
 
             var content = await fileStorage.OpenBookAsync(fileId.Value, cancellationToken);
             return Results.Stream(content, "application/epub+zip");
-        });
+        }).Produces(StatusCodes.Status200OK, contentType: "application/epub+zip");
 
         group.MapGet("/stats", async (
             ClaimsPrincipal principal,
             LibraryService library,
             CancellationToken cancellationToken,
             string timeZoneId = "UTC") =>
-            Results.Ok(await library.GetStatsAsync(principal.GetUserId(), timeZoneId, cancellationToken)));
+            Results.Ok(await library.GetStatsAsync(principal.GetUserId(), timeZoneId, cancellationToken)))
+            .Produces<LibraryStatsResponse>();
 
         return app;
     }
