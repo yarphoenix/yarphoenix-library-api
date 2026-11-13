@@ -44,6 +44,12 @@ if (!EF.IsDesignTime)
     using var scope = app.Services.CreateScope();
     await scope.ServiceProvider.GetRequiredService<AuthDbContext>().Database.MigrateAsync();
     await scope.ServiceProvider.GetRequiredService<CatalogDbContext>().Database.MigrateAsync();
+
+    // Демо-учётка с известным паролем — только для локальной разработки, в проде её быть не должно.
+    if (app.Environment.IsDevelopment())
+    {
+        await scope.ServiceProvider.GetRequiredService<DevUserSeeder>().SeedAsync(app.Lifetime.ApplicationStopping);
+    }
 }
 
 app.UseExceptionHandler();

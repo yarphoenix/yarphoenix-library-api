@@ -64,6 +64,10 @@ public static class AuthModule
         services.AddScoped<TokenService>();
         services.AddScoped<AuthService>();
 
+        // Демо-пользователь для локальной разработки; сам сидер запускает хост и только в Development.
+        services.Configure<DevSeedOptions>(configuration.GetSection(DevSeedOptions.SectionName));
+        services.AddScoped<DevUserSeeder>();
+
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         AddEmailSender(services, configuration);
 

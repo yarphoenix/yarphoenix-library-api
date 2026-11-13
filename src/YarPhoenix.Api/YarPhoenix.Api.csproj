@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
     <ProjectReference Include="..\YarPhoenix.Catalog\YarPhoenix.Catalog.csproj" />
@@ -20,6 +20,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Локальные секреты разработки (строка подключения, ключи MinIO, JWT) лежат в
+         user-secrets вне репозитория; команды — в README, раздел «Локальный запуск». -->
+    <UserSecretsId>76048104-ca18-4169-8a3d-a7a80db4bf63</UserSecretsId>
   </PropertyGroup>
 
 </Project>
