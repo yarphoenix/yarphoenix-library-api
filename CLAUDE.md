@@ -39,7 +39,10 @@ dotnet ef migrations add <Name> --project src/YarPhoenix.Auth --startup-project 
 ## Локальное окружение и сеть (важно)
 
 - **Postgres контейнера — на 127.0.0.1:5433** (не 5432: на машине живёт нативный виндовый Postgres).
-  Логин/пароль/БД — в `appsettings.Development.json`.
+  Логин/пароль/БД, ключи MinIO и JWT-секрет — в user-secrets
+  (`dotnet user-secrets list --project src/YarPhoenix.Api`); в `appsettings.Development.json` секретов нет.
+- В Development при старте сидится демо-пользователь `reader@example.com` / `password123`
+  (`DevUserSeeder`, секция `DevSeed`); в Production сидер не вызывается.
 - MinIO: 127.0.0.1:9000 (консоль 9001). Секреты compose — в `.env` (gitignored, образец `.env.example`).
 - VPN/прокси включён всегда (`HTTP(S)_PROXY=127.0.0.1:10809`); `HttpClient` подхватывает env-прокси сам.
   **openlibrary.org и archive.org заблокированы провайдером** — без прокси недоступны; на VPS в РФ
@@ -76,7 +79,7 @@ dotnet ef migrations add <Name> --project src/YarPhoenix.Auth --startup-project 
 | Open Library | `OpenLibrary:BaseUrl` | реальный или стаб :5090 |
 | Claude API | `Anthropic:ApiKey` (+ модели Haiku/Sonnet) | без ключа — мягкая деградация ассистента |
 | Email | пока `LoggingAuthEmailSender` (ссылки в лог) | реальный провайдер — в планах |
-| JWT | `Jwt:Secret` ≥ 32 символов (fail fast на старте) | dev-секрет в appsettings.Development.json |
+| JWT | `Jwt:Secret` ≥ 32 символов (fail fast на старте) | dev-секрет в user-secrets |
 
 ## Код-стайл
 
@@ -86,6 +89,8 @@ file-scoped namespaces, `_camelCase` поля, суффикс Async + Cancellati
 
 ## CI/CD (ТЗ §11)
 
-`.github/workflows/backend.yml`: restore → build -warnaserror → test → docker build. Деплой на VPS
-(Beget) — вручную для MVP: `docker compose up -d` + TLS через Caddy/nginx (HTTPS обязателен: фронт
+`.github/workflows/backend.yml`: restore → build -warnaserror → test (на PR ещё docker build);
+push в main/master публикует образ в GHCR (`ghcr.io/<owner>/<repo>:latest` и `:<sha>`). Деплой на VPS
+(Beget) — job `deploy`, только вручную (Run workflow): SSH → `git pull` → `docker compose pull backend`
+→ `up -d`; секреты и настройка — `docs/DEPLOY.md`, раздел 5. TLS через Caddy (HTTPS обязателен: фронт
 на gh-pages HTTPS-only, mixed content блокируется). CORS-origin прода задаётся `FRONTEND_ORIGIN` в `.env`.

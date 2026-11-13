@@ -1,12 +1,17 @@
 # Бэкенд-пайплайн (ТЗ §11.5): сборка + тесты + код-стайл
 # (EnforceCodeStyleInBuild уже включён в Directory.Build.props).
-# Деплой на VPS остаётся ручным для MVP (§9.2).
+# Push в основную ветку публикует образ в GHCR. Деплой на VPS — только вручную:
+# Actions → backend → Run workflow (см. docs/DEPLOY.md, раздел 5).
 name: backend
 
 on:
   push:
     branches: [main, master]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build-and-test:
@@ -28,4 +33,56 @@ jobs:
         run: dotnet test yarphoenix-library-api.slnx --no-build
 
       - name: Docker image builds
+        # В основной ветке образ собирает job publish — здесь проверяем только PR.
+        if: github.event_name == 'pull_request'
         run: docker build -f src/YarPhoenix.Api/Dockerfile .
+
+  publish:
+    # Образ публикуется только из основной ветки: PR и форки реестр не трогают.
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Image name
+        # GHCR принимает только нижний регистр, а имя владельца может быть любым.
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - name: Log in to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+      - name: Build and push
+        run: |
+          docker build -f src/YarPhoenix.Api/Dockerfile -t "$IMAGE:latest" -t "$IMAGE:$GITHUB_SHA" .
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:$GITHUB_SHA"
+
+  deploy:
+    # Ручной запуск из основной ветки: тесты → свежий образ → обновление на VPS.
+    if: github.event_name == 'workflow_dispatch'
+    needs: publish
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy over SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Отпечаток хоста берём из секрета, а не доверяем первому ответу сервера.
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd '$DEPLOY_PATH' && git pull --ff-only && docker compose --profile prod pull backend && docker compose --profile prod up -d"

@@ -38,6 +38,8 @@ cp .env.example .env
   (иначе обе фичи мягко деградируют).
 - `EGRESS_PROXY` — если провайдер VPS блокирует archive.org / api.anthropic.com,
   укажите egress-прокси `http://user:pass@host:port` (§5.1.2, §8).
+- `BACKEND_IMAGE` — оставьте пустым, если собираете образ на VPS; для деплоя из CI
+  укажите образ из GHCR (раздел 5).
 
 ### 1.3. Запуск
 
@@ -77,9 +79,9 @@ curl -fsS https://<API_DOMAIN>/api/catalog/books?pageSize=1   # список к�
 
 С открытого сайта на Pages:
 
-- **CORS** — залогиньтесь (`reader@example.com` / `password123`, если засеян dev-юзер,
-  или зарегистрируйтесь). Ошибок CORS в консоли быть не должно — бэкенд разрешает
-  `FRONTEND_ORIGIN`.
+- **CORS** — зарегистрируйтесь и войдите (демо-учётка `reader@example.com` создаётся только
+  в окружении Development, в проде её нет). Ошибок CORS в консоли быть не должно — бэкенд
+  разрешает `FRONTEND_ORIGIN`.
 - **Mixed content** — все запросы идут на `https://<API_DOMAIN>` (не http),
   иначе браузер их заблокирует.
 - **Аватар** — загрузите в настройках; картинка должна открываться по
@@ -97,5 +99,52 @@ git pull
 docker compose --profile prod up -d --build
 ```
 
-Автодеплой бэкенда из CI (SSH) — сознательно отложен (§9.2): ручного деплоя для MVP
-достаточно. Фронтенд деплоится автоматически на каждый push в main/master.
+Это ручной путь со сборкой образа прямо на VPS. Фронтенд деплоится автоматически на каждый
+push в main/master.
+
+---
+
+## 5. Деплой бэкенда из CI
+
+`.github/workflows/backend.yml` на каждый push в `main`/`master` публикует образ в GHCR:
+`ghcr.io/<owner>/<repo>:latest` и `:<sha коммита>`. Сам деплой запускается только вручную:
+**Actions → backend → Run workflow** (из основной ветки). Job `deploy` заходит на VPS по SSH и
+выполняет `git pull --ff-only`, `docker compose --profile prod pull backend`,
+`docker compose --profile prod up -d`.
+
+### 5.1. Разовая настройка VPS
+
+1. В `.env` на VPS задайте образ: `BACKEND_IMAGE=ghcr.io/<owner>/<repo>:latest`
+   (в нижнем регистре). Без этой переменной compose собирает образ локально, а `pull` не сработает.
+2. Доступ к образу. Если пакет в GHCR приватный — один раз выполните на VPS
+   `docker login ghcr.io` с Personal Access Token (право `read:packages`). Либо сделайте
+   пакет публичным: GitHub → Packages → пакет → Package settings → Change visibility.
+3. Заведите пользователя для деплоя с правом запускать Docker и SSH-ключ только для этой
+   задачи: `ssh-keygen -t ed25519 -f deploy_key -N ""`; публичную часть добавьте в
+   `~/.ssh/authorized_keys` этого пользователя на VPS.
+4. Если репозиторий приватный, `git pull` на VPS должен работать без пароля (deploy key
+   репозитория с правом чтения).
+
+### 5.2. Секреты и переменные GitHub
+
+**Settings → Environments → New environment → `production`** (там же можно включить
+обязательное подтверждение деплоя — Required reviewers). В этом окружении задайте:
+
+| Тип | Имя | Значение |
+|---|---|---|
+| Secret | `DEPLOY_HOST` | IP или домен VPS |
+| Secret | `DEPLOY_USER` | пользователь для деплоя |
+| Secret | `DEPLOY_SSH_KEY` | приватный ключ `deploy_key` целиком |
+| Secret | `DEPLOY_KNOWN_HOSTS` | вывод `ssh-keyscan -t ed25519 <DEPLOY_HOST>` |
+| Variable | `DEPLOY_PATH` | каталог с клоном репозитория на VPS, например `/opt/yarphoenix-api` |
+
+`DEPLOY_KNOWN_HOSTS` обязателен: workflow подключается с `StrictHostKeyChecking=yes` и не
+доверяет первому ответу сервера. Сверьте отпечаток с тем, что показывает сам VPS
+(`ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`).
+
+### 5.3. Откат
+
+Каждый образ помечен SHA коммита. Чтобы вернуться на предыдущую версию, укажите в `.env` на
+VPS `BACKEND_IMAGE=ghcr.io/<owner>/<repo>:<sha>` и выполните
+`docker compose --profile prod up -d`. Миграции EF назад не откатываются — если релиз менял
+схему, сначала проверьте совместимость старого кода с новой схемой.

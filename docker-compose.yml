@@ -4,6 +4,9 @@
 
 services:
   backend:
+    # Локально образ собирается из исходников (`up -d --build`). На VPS BACKEND_IMAGE
+    # указывает на образ из GHCR, и обновление — это `docker compose pull backend`.
+    image: ${BACKEND_IMAGE:-yarphoenix-library-api:local}
     build:
       context: .
       dockerfile: src/YarPhoenix.Api/Dockerfile

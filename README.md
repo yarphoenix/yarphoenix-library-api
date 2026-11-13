@@ -86,15 +86,27 @@ dotnet run --project src/YarPhoenix.Api
 dotnet test          # юнит-тесты
 ```
 
-`appsettings.Development.json` уже настроен на локальные Postgres (`127.0.0.1:5433`) и
-MinIO (`127.0.0.1:9000`). Прокси для Open Library / Internet Archive / Claude — через
-env `HTTP(S)_PROXY`, если провайдер их блокирует.
+`appsettings.Development.json` содержит только несекретные настройки (адрес MinIO, демо-учётка).
+Строка подключения, ключи MinIO и секрет JWT лежат в user-secrets вне репозитория — задайте
+их один раз значениями из своего `.env`:
+
+```bash
+dotnet user-secrets set "ConnectionStrings:Postgres" "Host=127.0.0.1;Port=5433;Database=<POSTGRES_DB>;Username=<POSTGRES_USER>;Password=<POSTGRES_PASSWORD>" --project src/YarPhoenix.Api
+dotnet user-secrets set "Minio:AccessKey" "<MINIO_ROOT_USER>" --project src/YarPhoenix.Api
+dotnet user-secrets set "Minio:SecretKey" "<MINIO_ROOT_PASSWORD>" --project src/YarPhoenix.Api
+dotnet user-secrets set "Jwt:Secret" "<случайная строка от 32 символов>" --project src/YarPhoenix.Api
+```
+
+В окружении Development при старте создаётся демо-пользователь `reader@example.com` /
+`password123` (секция `DevSeed`); в Production сидер не запускается. Прокси для Open Library /
+Internet Archive / Claude — через env `HTTP(S)_PROXY`, если провайдер их блокирует.
 
 ## Деплой
 
 Бэкенд + PostgreSQL + MinIO + Caddy (авто-TLS) — Docker на VPS. Пошаговый runbook:
 [docs/DEPLOY.md](docs/DEPLOY.md). CI (`.github/workflows/backend.yml`): build с
-`-warnaserror`, `dotnet test`, docker build на каждый push/PR.
+`-warnaserror` и `dotnet test` на каждый push/PR; push в основную ветку публикует образ в
+GHCR; деплой на VPS запускается вручную кнопкой Run workflow.
 
 ## Тесты
 
