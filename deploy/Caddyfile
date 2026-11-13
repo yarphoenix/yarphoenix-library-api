@@ -1,0 +1,20 @@
+# Обратный прокси YarPhoenix Library с автоматическим TLS (ТЗ §11.4).
+# API_DOMAIN — домен, указывающий на VPS (A-запись), либо форма sslip.io
+# (например 1-2-3-4.sslip.io для IP 1.2.3.4 — Let's Encrypt его подписывает,
+# покупать домен не нужно). Caddy сам получает и продлевает сертификат.
+
+{$API_DOMAIN} {
+	# Аватары — публичный бакет MinIO, отдаём path-style через тот же домен
+	# (Minio__PublicBaseUrl=https://{домен}). handle (не handle_path) сохраняет
+	# префикс /avatars, чтобы MinIO видел бакет в пути.
+	handle /avatars/* {
+		reverse_proxy minio:9000
+	}
+
+	# Всё остальное (/api/*, /health) — на бэкенд-монолит.
+	handle {
+		reverse_proxy backend:8080
+	}
+
+	encode gzip zstd
+}

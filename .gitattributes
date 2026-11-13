@@ -1,0 +1,3 @@
+# .editorconfig задаёт end_of_line = lf, а стиль проверяется при сборке
+# (EnforceCodeStyleInBuild). Храним и выгружаем текст с LF на всех платформах.
+* text=auto eol=lf

@@ -1,0 +1,31 @@
+# Бэкенд-пайплайн (ТЗ §11.5): сборка + тесты + код-стайл
+# (EnforceCodeStyleInBuild уже включён в Directory.Build.props).
+# Деплой на VPS остаётся ручным для MVP (§9.2).
+name: backend
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore yarphoenix-library-api.slnx
+
+      - name: Build (style enforced)
+        run: dotnet build yarphoenix-library-api.slnx --no-restore -warnaserror
+
+      - name: Test
+        run: dotnet test yarphoenix-library-api.slnx --no-build
+
+      - name: Docker image builds
+        run: docker build -f src/YarPhoenix.Api/Dockerfile .

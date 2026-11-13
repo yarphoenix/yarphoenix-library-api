@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/YarPhoenix.Api/YarPhoenix.Api.csproj" />
+    <Project Path="src/YarPhoenix.Shared/YarPhoenix.Shared.csproj" />
+    <Project Path="src/YarPhoenix.Catalog/YarPhoenix.Catalog.csproj" />
+    <Project Path="src/YarPhoenix.Auth/YarPhoenix.Auth.csproj" />
+    <Project Path="src/YarPhoenix.Storage/YarPhoenix.Storage.csproj" />
+    <Project Path="src/YarPhoenix.Ai/YarPhoenix.Ai.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/YarPhoenix.Catalog.Tests/YarPhoenix.Catalog.Tests.csproj" />
+    <Project Path="tests/YarPhoenix.Auth.Tests/YarPhoenix.Auth.Tests.csproj" />
+  </Folder>
+</Solution>

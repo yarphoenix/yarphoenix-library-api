@@ -1,0 +1,103 @@
+# Продовый стек VPS: backend + Postgres + MinIO (ТЗ §11.2).
+# Фронтенд сюда не входит — его отдаёт GitHub Pages (§11.1).
+# Секреты — только через .env (см. .env.example), никогда в этом файле.
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: src/YarPhoenix.Api/Dockerfile
+    restart: unless-stopped
+    ports:
+      # Только loopback: наружу API отдаёт Caddy по HTTPS (§11.4), напрямую не светим.
+      - '127.0.0.1:5080:8080'
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Minio__Endpoint: minio:9000
+      Minio__AccessKey: ${MINIO_ROOT_USER}
+      Minio__SecretKey: ${MINIO_ROOT_PASSWORD}
+      # Публичный адрес аватаров: тот же домен, путь /avatars/* проксирует Caddy на MinIO.
+      Minio__PublicBaseUrl: ${MINIO_PUBLIC_URL:-http://127.0.0.1:9000}
+      Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:3000}
+      Frontend__BaseUrl: ${FRONTEND_ORIGIN:-http://localhost:3000}
+      Jwt__Secret: ${JWT_SECRET}
+      Anthropic__ApiKey: ${ANTHROPIC_API_KEY:-}
+      # Почтовый провайдер (Resend). Пусто → dev-режим со ссылками в лог.
+      Email__ApiKey: ${RESEND_API_KEY:-}
+      Email__From: ${EMAIL_FROM:-YarPhoenix Library <onboarding@resend.dev>}
+      # Egress-прокси: archive.org И api.anthropic.com блокируются с RU-IP (§8, §5.1.2).
+      # NO_PROXY обязателен для внутренних адресов, иначе Postgres/MinIO пойдут через прокси.
+      HTTP_PROXY: ${EGRESS_PROXY:-}
+      HTTPS_PROXY: ${EGRESS_PROXY:-}
+      NO_PROXY: localhost,127.0.0.1,postgres,minio,backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    ports:
+      # Только loopback и нестандартный 5433: на машине разработчика 5432 занят
+      # нативным PostgreSQL, а наружу базу светить нельзя.
+      - '127.0.0.1:5433:5432'
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      # Потерять этот volume — потерять пользователей/полки/прогресс (§11.2).
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    restart: unless-stopped
+    command: server /data --console-address ':9001'
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      # Loopback: S3 (9000) и консоль (9001) наружу не светим — аватары идут через Caddy.
+      - '127.0.0.1:9000:9000'
+      - '127.0.0.1:9001:9001'
+    volumes:
+      # Потерять этот volume — потерять все загруженные книги (§11.2).
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', 'http://localhost:9000/minio/health/live']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Обратный прокси с авто-TLS (§11.4). Только в проде: profiles=[prod], поэтому
+  # dev-команда `docker compose up -d postgres minio` его не поднимает.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    profiles: [prod]
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      API_DOMAIN: ${API_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - backend
+      - minio
+
+volumes:
+  pg-data:
+  minio-data:
+  caddy-data:
+  caddy-config:
