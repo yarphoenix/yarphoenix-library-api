@@ -1,0 +1,602 @@
+{
+  ".github/workflows/backend.yml": {
+    "mtime": 1794581291.5498588,
+    "seen": 1794659738.7423332,
+    "ast_hash": "ac9dc1792e2df17f8d95b43b5b730d1d",
+    "semantic_hash": "ac9dc1792e2df17f8d95b43b5b730d1d"
+  },
+  "docker-compose.yml": {
+    "mtime": 1794581301.4379723,
+    "seen": 1794659738.7423332,
+    "ast_hash": "7219d2c392b740082ae03819e033ab2c",
+    "semantic_hash": "7219d2c392b740082ae03819e033ab2c"
+  },
+  "src/YarPhoenix.Ai/AiModule.cs": {
+    "mtime": 1783549555.6104982,
+    "seen": 1794659738.7423332,
+    "ast_hash": "825f1259822395f8ff4e545f8bf3a712",
+    "semantic_hash": "825f1259822395f8ff4e545f8bf3a712"
+  },
+  "src/YarPhoenix.Ai/Application/AssistantTemplates.cs": {
+    "mtime": 1783549535.8803957,
+    "seen": 1794659738.7423332,
+    "ast_hash": "060fac4dbd32b13024f8665b799f177e",
+    "semantic_hash": "060fac4dbd32b13024f8665b799f177e"
+  },
+  "src/YarPhoenix.Ai/Application/CfiParser.cs": {
+    "mtime": 1783549490.3236275,
+    "seen": 1794659738.7423332,
+    "ast_hash": "3cbeeb225d222a33a4bce9d5d8390fba",
+    "semantic_hash": "3cbeeb225d222a33a4bce9d5d8390fba"
+  },
+  "src/YarPhoenix.Ai/Application/IReadingAssistant.cs": {
+    "mtime": 1783442269.6382997,
+    "seen": 1794659738.7423332,
+    "ast_hash": "1a683790e1c1f52afb03b9a1509fb9cc",
+    "semantic_hash": "1a683790e1c1f52afb03b9a1509fb9cc"
+  },
+  "src/YarPhoenix.Ai/Application/ReadingContextBuilder.cs": {
+    "mtime": 1783549509.580686,
+    "seen": 1794659738.7423332,
+    "ast_hash": "e7447f6778622a01c547e6c7b169d747",
+    "semantic_hash": "e7447f6778622a01c547e6c7b169d747"
+  },
+  "src/YarPhoenix.Ai/Contracts/AssistantContracts.cs": {
+    "mtime": 1783549543.293276,
+    "seen": 1794659738.7423332,
+    "ast_hash": "e4010da912f8e8f31c5962fccb40f12b",
+    "semantic_hash": "e4010da912f8e8f31c5962fccb40f12b"
+  },
+  "src/YarPhoenix.Ai/Endpoints/AssistantEndpoints.cs": {
+    "mtime": 1794583128.8378947,
+    "seen": 1794659738.7423332,
+    "ast_hash": "608487f494dfe772a5e4c9a957f45dcd",
+    "semantic_hash": "608487f494dfe772a5e4c9a957f45dcd"
+  },
+  "src/YarPhoenix.Ai/Infrastructure/ClaudeClient.cs": {
+    "mtime": 1783442328.0237699,
+    "seen": 1794659738.7423332,
+    "ast_hash": "1e54d6df2b9ca1cd0317b102c717cdb2",
+    "semantic_hash": "1e54d6df2b9ca1cd0317b102c717cdb2"
+  },
+  "src/YarPhoenix.Ai/Infrastructure/ClaudeOptions.cs": {
+    "mtime": 1783442291.4087868,
+    "seen": 1794659738.7423332,
+    "ast_hash": "bbf3bf259726a2a9811f8224e6413e30",
+    "semantic_hash": "bbf3bf259726a2a9811f8224e6413e30"
+  },
+  "src/YarPhoenix.Ai/Infrastructure/ClaudeReadingAssistant.cs": {
+    "mtime": 1783443355.613177,
+    "seen": 1794659738.7423332,
+    "ast_hash": "834f237808b0c143b4aa8b9534798d3e",
+    "semantic_hash": "834f237808b0c143b4aa8b9534798d3e"
+  },
+  "src/YarPhoenix.Ai/Infrastructure/Epub/EpubTextExtractor.cs": {
+    "mtime": 1783549470.6532373,
+    "seen": 1794659738.7423332,
+    "ast_hash": "561da85a1cde2b7ccfd768dd2b2beee9",
+    "semantic_hash": "561da85a1cde2b7ccfd768dd2b2beee9"
+  },
+  "src/YarPhoenix.Ai/YarPhoenix.Ai.csproj": {
+    "mtime": 1783549550.2889998,
+    "seen": 1794659738.7423332,
+    "ast_hash": "bbf0e162ede7d2fd097ac7d65e4ff4b5",
+    "semantic_hash": "bbf0e162ede7d2fd097ac7d65e4ff4b5"
+  },
+  "src/YarPhoenix.Api/Program.cs": {
+    "mtime": 1794599874.0907075,
+    "seen": 1794659738.7423332,
+    "ast_hash": "a071829784304ad7d40bffaf6c3ca0d7",
+    "semantic_hash": "a071829784304ad7d40bffaf6c3ca0d7"
+  },
+  "src/YarPhoenix.Api/Properties/launchSettings.json": {
+    "mtime": 1783380945.0714972,
+    "seen": 1794659738.7423332,
+    "ast_hash": "19e2d7baa55df3217764d5aa0511fe83",
+    "semantic_hash": "19e2d7baa55df3217764d5aa0511fe83"
+  },
+  "src/YarPhoenix.Api/YarPhoenix.Api.csproj": {
+    "mtime": 1794583630.9247527,
+    "seen": 1794659738.7423332,
+    "ast_hash": "101bac651a3bf7c418dc8a67506a2185",
+    "semantic_hash": "101bac651a3bf7c418dc8a67506a2185"
+  },
+  "src/YarPhoenix.Api/appsettings.Development.json": {
+    "mtime": 1794580297.114354,
+    "seen": 1794659738.7423332,
+    "ast_hash": "7febedf2a0b4c12b4f689c073970ab2f",
+    "semantic_hash": "7febedf2a0b4c12b4f689c073970ab2f"
+  },
+  "src/YarPhoenix.Api/appsettings.json": {
+    "mtime": 1783523643.0235662,
+    "seen": 1794659738.7423332,
+    "ast_hash": "f3c6addf382e45d019869e6c5faaa9e0",
+    "semantic_hash": "f3c6addf382e45d019869e6c5faaa9e0"
+  },
+  "src/YarPhoenix.Auth/Application/AuthService.cs": {
+    "mtime": 1783524193.6358576,
+    "seen": 1794659738.7423332,
+    "ast_hash": "092e162af2169747cfba2ec60c3c759d",
+    "semantic_hash": "092e162af2169747cfba2ec60c3c759d"
+  },
+  "src/YarPhoenix.Auth/Application/DevSeedOptions.cs": {
+    "mtime": 1794580299.6808946,
+    "seen": 1794659738.7423332,
+    "ast_hash": "9d4fa883b42b8ce7f734132705ed9e01",
+    "semantic_hash": "9d4fa883b42b8ce7f734132705ed9e01"
+  },
+  "src/YarPhoenix.Auth/Application/EmailOptions.cs": {
+    "mtime": 1783523568.0754364,
+    "seen": 1794659738.7423332,
+    "ast_hash": "0c4a9ae49f528ed5259a7ba6ed616701",
+    "semantic_hash": "0c4a9ae49f528ed5259a7ba6ed616701"
+  },
+  "src/YarPhoenix.Auth/Application/FrontendOptions.cs": {
+    "mtime": 1783383133.6608174,
+    "seen": 1794659738.7423332,
+    "ast_hash": "701c8c0b6ef7ecf200a6178ef912ef86",
+    "semantic_hash": "701c8c0b6ef7ecf200a6178ef912ef86"
+  },
+  "src/YarPhoenix.Auth/Application/IAuthEmailSender.cs": {
+    "mtime": 1783383082.8923473,
+    "seen": 1794659738.7423332,
+    "ast_hash": "19667e80dcbe0236dcd79c649bf1026d",
+    "semantic_hash": "19667e80dcbe0236dcd79c649bf1026d"
+  },
+  "src/YarPhoenix.Auth/Application/JwtOptions.cs": {
+    "mtime": 1783383069.7640753,
+    "seen": 1794659738.7423332,
+    "ast_hash": "51e695495bc1ed4e3997a5008ebd2b13",
+    "semantic_hash": "51e695495bc1ed4e3997a5008ebd2b13"
+  },
+  "src/YarPhoenix.Auth/Application/TokenService.cs": {
+    "mtime": 1783383082.1124816,
+    "seen": 1794659738.7423332,
+    "ast_hash": "860ffefbd8a659db410cce5bee2cf559",
+    "semantic_hash": "860ffefbd8a659db410cce5bee2cf559"
+  },
+  "src/YarPhoenix.Auth/AuthModule.cs": {
+    "mtime": 1794580481.9251158,
+    "seen": 1794659738.7423332,
+    "ast_hash": "2bfae64dca9202f05cd622d6187a1cb5",
+    "semantic_hash": "2bfae64dca9202f05cd622d6187a1cb5"
+  },
+  "src/YarPhoenix.Auth/Contracts/AuthContracts.cs": {
+    "mtime": 1783524153.5008824,
+    "seen": 1794659738.7423332,
+    "ast_hash": "cfc03805de845192c45fffd4964ed2d5",
+    "semantic_hash": "cfc03805de845192c45fffd4964ed2d5"
+  },
+  "src/YarPhoenix.Auth/Domain/ApplicationUser.cs": {
+    "mtime": 1783523108.751191,
+    "seen": 1794659738.7423332,
+    "ast_hash": "b309e45d1f8206c97e6e818486b13d5f",
+    "semantic_hash": "b309e45d1f8206c97e6e818486b13d5f"
+  },
+  "src/YarPhoenix.Auth/Domain/RefreshToken.cs": {
+    "mtime": 1783383049.645375,
+    "seen": 1794659738.7423332,
+    "ast_hash": "8f1ea666c891f47d6490154114e1c6c1",
+    "semantic_hash": "8f1ea666c891f47d6490154114e1c6c1"
+  },
+  "src/YarPhoenix.Auth/Endpoints/AuthEndpoints.cs": {
+    "mtime": 1794583567.7055788,
+    "seen": 1794659738.7423332,
+    "ast_hash": "caf7e8a44592b67caacad2842e0fa04e",
+    "semantic_hash": "caf7e8a44592b67caacad2842e0fa04e"
+  },
+  "src/YarPhoenix.Auth/Infrastructure/AuthDbContext.cs": {
+    "mtime": 1783383055.8267024,
+    "seen": 1794659738.7423332,
+    "ast_hash": "18da7d962ee6bbc5e9bc2c49c2665433",
+    "semantic_hash": "18da7d962ee6bbc5e9bc2c49c2665433"
+  },
+  "src/YarPhoenix.Auth/Infrastructure/AuthDbContextFactory.cs": {
+    "mtime": 1783423634.8748472,
+    "seen": 1794659738.7423332,
+    "ast_hash": "9e43dc289a20e253437e33197923237c",
+    "semantic_hash": "9e43dc289a20e253437e33197923237c"
+  },
+  "src/YarPhoenix.Auth/Infrastructure/DevUserSeeder.cs": {
+    "mtime": 1794580470.4757824,
+    "seen": 1794659738.7423332,
+    "ast_hash": "0be11d1f58cd85f4968827e8e4f47d68",
+    "semantic_hash": "0be11d1f58cd85f4968827e8e4f47d68"
+  },
+  "src/YarPhoenix.Auth/Infrastructure/LoggingAuthEmailSender.cs": {
+    "mtime": 1783383086.7158046,
+    "seen": 1794659738.7423332,
+    "ast_hash": "947941a76258a7afeb2f8039c5600424",
+    "semantic_hash": "947941a76258a7afeb2f8039c5600424"
+  },
+  "src/YarPhoenix.Auth/Infrastructure/ResendEmailSender.cs": {
+    "mtime": 1783523606.8148239,
+    "seen": 1794659738.7423332,
+    "ast_hash": "918a7fe8152c9cd8804348c5f0b8a832",
+    "semantic_hash": "918a7fe8152c9cd8804348c5f0b8a832"
+  },
+  "src/YarPhoenix.Auth/Migrations/20260707112450_InitialAuth.Designer.cs": {
+    "mtime": 1783423490.9452124,
+    "seen": 1794659738.7423332,
+    "ast_hash": "4fd18207eead9551dc014470cb86cf74",
+    "semantic_hash": "4fd18207eead9551dc014470cb86cf74"
+  },
+  "src/YarPhoenix.Auth/Migrations/20260707112450_InitialAuth.cs": {
+    "mtime": 1783423490.9442115,
+    "seen": 1794659738.7423332,
+    "ast_hash": "0ab8304e834338c4d6b3ac4dd7355261",
+    "semantic_hash": "0ab8304e834338c4d6b3ac4dd7355261"
+  },
+  "src/YarPhoenix.Auth/Migrations/20260708150644_AddUserAvatarKey.Designer.cs": {
+    "mtime": 1783523204.802219,
+    "seen": 1794659738.7423332,
+    "ast_hash": "24d354e55cb84a1c3e2e590df8a06131",
+    "semantic_hash": "24d354e55cb84a1c3e2e590df8a06131"
+  },
+  "src/YarPhoenix.Auth/Migrations/20260708150644_AddUserAvatarKey.cs": {
+    "mtime": 1783523204.802219,
+    "seen": 1794659738.7423332,
+    "ast_hash": "f8244d6601d1ac5ae7045af71da94d34",
+    "semantic_hash": "f8244d6601d1ac5ae7045af71da94d34"
+  },
+  "src/YarPhoenix.Auth/Migrations/AuthDbContextModelSnapshot.cs": {
+    "mtime": 1783523204.8032215,
+    "seen": 1794659738.7423332,
+    "ast_hash": "0cfa7b73399d921f2bead746f7187ffa",
+    "semantic_hash": "0cfa7b73399d921f2bead746f7187ffa"
+  },
+  "src/YarPhoenix.Auth/YarPhoenix.Auth.csproj": {
+    "mtime": 1783523559.688056,
+    "seen": 1794659738.7423332,
+    "ast_hash": "37ea986a9b89dfde29a0d97f28693061",
+    "semantic_hash": "37ea986a9b89dfde29a0d97f28693061"
+  },
+  "src/YarPhoenix.Catalog/Application/BookProcessingQueue.cs": {
+    "mtime": 1783426350.897842,
+    "seen": 1794659738.7423332,
+    "ast_hash": "ea1bdec73bb340b3c66bf1d4548942b2",
+    "semantic_hash": "ea1bdec73bb340b3c66bf1d4548942b2"
+  },
+  "src/YarPhoenix.Catalog/Application/BookSearchQuery.cs": {
+    "mtime": 1783380646.2257905,
+    "seen": 1794659738.7423332,
+    "ast_hash": "14baa35490f9090a5681da0851132114",
+    "semantic_hash": "14baa35490f9090a5681da0851132114"
+  },
+  "src/YarPhoenix.Catalog/Application/CatalogService.cs": {
+    "mtime": 1783522007.9808059,
+    "seen": 1794659738.7423332,
+    "ast_hash": "84fd6143720c554bb416a589ebf7ba18",
+    "semantic_hash": "84fd6143720c554bb416a589ebf7ba18"
+  },
+  "src/YarPhoenix.Catalog/Application/IBookMetadataProvider.cs": {
+    "mtime": 1783521969.3885698,
+    "seen": 1794659738.7423332,
+    "ast_hash": "04229f838ef5c7b3f873e9ab03f824ad",
+    "semantic_hash": "04229f838ef5c7b3f873e9ab03f824ad"
+  },
+  "src/YarPhoenix.Catalog/Application/IPublicDomainSource.cs": {
+    "mtime": 1783521857.474612,
+    "seen": 1794659738.7423332,
+    "ast_hash": "a5ac96da81c7864daf1a8b87e038157c",
+    "semantic_hash": "a5ac96da81c7864daf1a8b87e038157c"
+  },
+  "src/YarPhoenix.Catalog/Application/LibraryService.cs": {
+    "mtime": 1783522043.9374938,
+    "seen": 1794659738.7423332,
+    "ast_hash": "a28a820c9985177e36f1a1e1e88d49cf",
+    "semantic_hash": "a28a820c9985177e36f1a1e1e88d49cf"
+  },
+  "src/YarPhoenix.Catalog/Application/PublicDomainContracts.cs": {
+    "mtime": 1783521849.413216,
+    "seen": 1794659738.7423332,
+    "ast_hash": "4eacdf6453651b0be5cc1e37923f2092",
+    "semantic_hash": "4eacdf6453651b0be5cc1e37923f2092"
+  },
+  "src/YarPhoenix.Catalog/Application/PublicDomainWhitelist.cs": {
+    "mtime": 1783522252.9320118,
+    "seen": 1794659738.7423332,
+    "ast_hash": "d33ab8f84099804b10114ad6ef26c447",
+    "semantic_hash": "d33ab8f84099804b10114ad6ef26c447"
+  },
+  "src/YarPhoenix.Catalog/Application/StreakLogic.cs": {
+    "mtime": 1783425253.1281276,
+    "seen": 1794659738.7423332,
+    "ast_hash": "67398e0bae159314989a2fd6025bce27",
+    "semantic_hash": "67398e0bae159314989a2fd6025bce27"
+  },
+  "src/YarPhoenix.Catalog/Application/UserDataRemover.cs": {
+    "mtime": 1783549203.1431158,
+    "seen": 1794659738.7423332,
+    "ast_hash": "1a9ccc7358b6b508688f243a64af9452",
+    "semantic_hash": "1a9ccc7358b6b508688f243a64af9452"
+  },
+  "src/YarPhoenix.Catalog/CatalogModule.cs": {
+    "mtime": 1783524146.3119123,
+    "seen": 1794659738.7423332,
+    "ast_hash": "024548cf2410ec847a7f6874b710f749",
+    "semantic_hash": "024548cf2410ec847a7f6874b710f749"
+  },
+  "src/YarPhoenix.Catalog/Contracts/BookContracts.cs": {
+    "mtime": 1783521993.1389236,
+    "seen": 1794659738.7423332,
+    "ast_hash": "51c3362cc8aa2cccb1b2b4ce57c1a6e9",
+    "semantic_hash": "51c3362cc8aa2cccb1b2b4ce57c1a6e9"
+  },
+  "src/YarPhoenix.Catalog/Contracts/LibraryContracts.cs": {
+    "mtime": 1783522048.4355412,
+    "seen": 1794659738.7423332,
+    "ast_hash": "b3a64863f58ac0e1aa076973329f087c",
+    "semantic_hash": "b3a64863f58ac0e1aa076973329f087c"
+  },
+  "src/YarPhoenix.Catalog/Domain/Book.cs": {
+    "mtime": 1783425190.403608,
+    "seen": 1794659738.7423332,
+    "ast_hash": "6bd8184c659ea40dd5e45e93719d8472",
+    "semantic_hash": "6bd8184c659ea40dd5e45e93719d8472"
+  },
+  "src/YarPhoenix.Catalog/Domain/ReaderProfile.cs": {
+    "mtime": 1783425200.2573612,
+    "seen": 1794659738.7423332,
+    "ast_hash": "7bc72d51d54f49d36ccaae9aa1234d27",
+    "semantic_hash": "7bc72d51d54f49d36ccaae9aa1234d27"
+  },
+  "src/YarPhoenix.Catalog/Domain/UserAchievement.cs": {
+    "mtime": 1783425202.6531973,
+    "seen": 1794659738.7423332,
+    "ast_hash": "e13920fe039aba1c5e6fe0f4a48f2b6d",
+    "semantic_hash": "e13920fe039aba1c5e6fe0f4a48f2b6d"
+  },
+  "src/YarPhoenix.Catalog/Domain/UserBook.cs": {
+    "mtime": 1783425195.9945767,
+    "seen": 1794659738.7423332,
+    "ast_hash": "10a60a5739f637a6dbb6ae37a162f818",
+    "semantic_hash": "10a60a5739f637a6dbb6ae37a162f818"
+  },
+  "src/YarPhoenix.Catalog/Endpoints/CatalogEndpoints.cs": {
+    "mtime": 1794583126.809215,
+    "seen": 1794659738.7423332,
+    "ast_hash": "855c93dc694b97f1fdfdeaefb9c0bf90",
+    "semantic_hash": "855c93dc694b97f1fdfdeaefb9c0bf90"
+  },
+  "src/YarPhoenix.Catalog/Endpoints/LibraryEndpoints.cs": {
+    "mtime": 1794583231.0928736,
+    "seen": 1794659738.7423332,
+    "ast_hash": "962ff12a9170f6cc07a5a80b7a5b183f",
+    "semantic_hash": "962ff12a9170f6cc07a5a80b7a5b183f"
+  },
+  "src/YarPhoenix.Catalog/Infrastructure/CatalogDbContext.cs": {
+    "mtime": 1783425212.2785828,
+    "seen": 1794659738.7423332,
+    "ast_hash": "290da23184fb74275c6583fb506b5b12",
+    "semantic_hash": "290da23184fb74275c6583fb506b5b12"
+  },
+  "src/YarPhoenix.Catalog/Infrastructure/CatalogDbContextFactory.cs": {
+    "mtime": 1783425215.406772,
+    "seen": 1794659738.7423332,
+    "ast_hash": "4ef76ac2531f2dc58da1983ffe11ac5a",
+    "semantic_hash": "4ef76ac2531f2dc58da1983ffe11ac5a"
+  },
+  "src/YarPhoenix.Catalog/Infrastructure/Epub/EpubMetadataParser.cs": {
+    "mtime": 1783426350.8492472,
+    "seen": 1794659738.7423332,
+    "ast_hash": "783d05b94f13658430a60d6e5599f2c7",
+    "semantic_hash": "783d05b94f13658430a60d6e5599f2c7"
+  },
+  "src/YarPhoenix.Catalog/Infrastructure/Epub/EpubProcessingWorker.cs": {
+    "mtime": 1783427279.321494,
+    "seen": 1794659738.7423332,
+    "ast_hash": "74fc67bf78e4da01a5380a1067f889e5",
+    "semantic_hash": "74fc67bf78e4da01a5380a1067f889e5"
+  },
+  "src/YarPhoenix.Catalog/Infrastructure/InternetArchive/InternetArchiveModels.cs": {
+    "mtime": 1783522173.2500427,
+    "seen": 1794659738.7423332,
+    "ast_hash": "dd808fbceab4584126ef7cbcea6d31b2",
+    "semantic_hash": "dd808fbceab4584126ef7cbcea6d31b2"
+  },
+  "src/YarPhoenix.Catalog/Infrastructure/InternetArchive/InternetArchiveSource.cs": {
+    "mtime": 1783522179.6825309,
+    "seen": 1794659738.7423332,
+    "ast_hash": "c217c3c750bb7cc0df76e65965c7dfd8",
+    "semantic_hash": "c217c3c750bb7cc0df76e65965c7dfd8"
+  },
+  "src/YarPhoenix.Catalog/Infrastructure/OpenLibrary/OpenLibraryModels.cs": {
+    "mtime": 1783521962.441939,
+    "seen": 1794659738.7423332,
+    "ast_hash": "5c0426e2eb5417c59b20da46d7519481",
+    "semantic_hash": "5c0426e2eb5417c59b20da46d7519481"
+  },
+  "src/YarPhoenix.Catalog/Infrastructure/OpenLibrary/OpenLibraryProvider.cs": {
+    "mtime": 1783521984.6516302,
+    "seen": 1794659738.7423332,
+    "ast_hash": "dc4cc031e6dfff87d3477ef0b91cb3ea",
+    "semantic_hash": "dc4cc031e6dfff87d3477ef0b91cb3ea"
+  },
+  "src/YarPhoenix.Catalog/Infrastructure/OpenLibrary/OpenLibraryQuery.cs": {
+    "mtime": 1783380859.6240606,
+    "seen": 1794659738.7423332,
+    "ast_hash": "38a89102a3e258923d78923d7d28e7cb",
+    "semantic_hash": "38a89102a3e258923d78923d7d28e7cb"
+  },
+  "src/YarPhoenix.Catalog/Migrations/20260707115950_InitialCatalog.Designer.cs": {
+    "mtime": 1783425590.3392522,
+    "seen": 1794659738.7423332,
+    "ast_hash": "4b40d6daaf49ae19a987fc602196ef46",
+    "semantic_hash": "4b40d6daaf49ae19a987fc602196ef46"
+  },
+  "src/YarPhoenix.Catalog/Migrations/20260707115950_InitialCatalog.cs": {
+    "mtime": 1783425590.3382359,
+    "seen": 1794659738.7423332,
+    "ast_hash": "cb11b20f9bf75a837a02b121454a4d70",
+    "semantic_hash": "cb11b20f9bf75a837a02b121454a4d70"
+  },
+  "src/YarPhoenix.Catalog/Migrations/CatalogDbContextModelSnapshot.cs": {
+    "mtime": 1783425590.3423703,
+    "seen": 1794659738.7423332,
+    "ast_hash": "bfa7d3f447c114b124688192715c1e5f",
+    "semantic_hash": "bfa7d3f447c114b124688192715c1e5f"
+  },
+  "src/YarPhoenix.Catalog/YarPhoenix.Catalog.csproj": {
+    "mtime": 1783426350.7325375,
+    "seen": 1794659738.7423332,
+    "ast_hash": "27ecd0f0ae08e4d901bdee9cf03eb26c",
+    "semantic_hash": "27ecd0f0ae08e4d901bdee9cf03eb26c"
+  },
+  "src/YarPhoenix.Shared/ClaimsPrincipalExtensions.cs": {
+    "mtime": 1783425445.6081645,
+    "seen": 1794659738.7423332,
+    "ast_hash": "f02dec0e859a3177aed2ab9a8a6de918",
+    "semantic_hash": "f02dec0e859a3177aed2ab9a8a6de918"
+  },
+  "src/YarPhoenix.Shared/Error.cs": {
+    "mtime": 1783383131.0808897,
+    "seen": 1794659738.7423332,
+    "ast_hash": "96ecc4916d05225a5060bc454de96196",
+    "semantic_hash": "96ecc4916d05225a5060bc454de96196"
+  },
+  "src/YarPhoenix.Shared/IUserDataRemover.cs": {
+    "mtime": 1783524112.13993,
+    "seen": 1794659738.7423332,
+    "ast_hash": "5071f83e7dfe7dbb606720aeda285d6f",
+    "semantic_hash": "5071f83e7dfe7dbb606720aeda285d6f"
+  },
+  "src/YarPhoenix.Shared/Result.cs": {
+    "mtime": 1783380641.8932061,
+    "seen": 1794659738.7423332,
+    "ast_hash": "7fe9494eba3158f09c3ff0d452572478",
+    "semantic_hash": "7fe9494eba3158f09c3ff0d452572478"
+  },
+  "src/YarPhoenix.Shared/YarPhoenix.Shared.csproj": {
+    "mtime": 1783380506.6315112,
+    "seen": 1794659738.7423332,
+    "ast_hash": "46b0780bd56312ea2d1bab391f179e89",
+    "semantic_hash": "46b0780bd56312ea2d1bab391f179e89"
+  },
+  "src/YarPhoenix.Storage/IFileStorage.cs": {
+    "mtime": 1783523065.9465103,
+    "seen": 1794659738.7423332,
+    "ast_hash": "4e786a1514c2b5ed5559ffb70513d5be",
+    "semantic_hash": "4e786a1514c2b5ed5559ffb70513d5be"
+  },
+  "src/YarPhoenix.Storage/MinioFileStorage.cs": {
+    "mtime": 1783523091.751401,
+    "seen": 1794659738.7423332,
+    "ast_hash": "e32a2a8954a4ce848ea71da07063b174",
+    "semantic_hash": "e32a2a8954a4ce848ea71da07063b174"
+  },
+  "src/YarPhoenix.Storage/MinioOptions.cs": {
+    "mtime": 1783523056.1245768,
+    "seen": 1794659738.7423332,
+    "ast_hash": "d708e5701191646b2538e14118c6cf82",
+    "semantic_hash": "d708e5701191646b2538e14118c6cf82"
+  },
+  "src/YarPhoenix.Storage/StorageModule.cs": {
+    "mtime": 1783426280.1398256,
+    "seen": 1794659738.7423332,
+    "ast_hash": "86552739a1f47cf45b318307fc0b0d4d",
+    "semantic_hash": "86552739a1f47cf45b318307fc0b0d4d"
+  },
+  "src/YarPhoenix.Storage/YarPhoenix.Storage.csproj": {
+    "mtime": 1783426481.3548958,
+    "seen": 1794659738.7423332,
+    "ast_hash": "595a649d59d301cef82a69286cc275bb",
+    "semantic_hash": "595a649d59d301cef82a69286cc275bb"
+  },
+  "tests/YarPhoenix.Auth.Tests/AuthServiceRefreshTests.cs": {
+    "mtime": 1783550265.7611208,
+    "seen": 1794659738.7423332,
+    "ast_hash": "355327742a8b1d1f89ca11a83df2ab86",
+    "semantic_hash": "355327742a8b1d1f89ca11a83df2ab86"
+  },
+  "tests/YarPhoenix.Auth.Tests/DevUserSeederTests.cs": {
+    "mtime": 1794580952.2903936,
+    "seen": 1794659738.7423332,
+    "ast_hash": "9bda7e1b6b7b41102b63395dfa2c64e2",
+    "semantic_hash": "9bda7e1b6b7b41102b63395dfa2c64e2"
+  },
+  "tests/YarPhoenix.Auth.Tests/YarPhoenix.Auth.Tests.csproj": {
+    "mtime": 1783551196.2033212,
+    "seen": 1794659738.7423332,
+    "ast_hash": "3c1a8801ebc7d7be5c224ebee0c86e0b",
+    "semantic_hash": "3c1a8801ebc7d7be5c224ebee0c86e0b"
+  },
+  "tests/YarPhoenix.Catalog.Tests/AssistantTemplatesTests.cs": {
+    "mtime": 1783549645.196409,
+    "seen": 1794659738.7423332,
+    "ast_hash": "f4211f552109f4ba69409fa4f532bb5c",
+    "semantic_hash": "f4211f552109f4ba69409fa4f532bb5c"
+  },
+  "tests/YarPhoenix.Catalog.Tests/CfiParserTests.cs": {
+    "mtime": 1783549619.1304886,
+    "seen": 1794659738.7423332,
+    "ast_hash": "c5c48d8e8158bb17705b3be3ebf132d7",
+    "semantic_hash": "c5c48d8e8158bb17705b3be3ebf132d7"
+  },
+  "tests/YarPhoenix.Catalog.Tests/EpubMetadataParserTests.cs": {
+    "mtime": 1783427411.1093285,
+    "seen": 1794659738.7423332,
+    "ast_hash": "7e0312617fdfef87a04e53413eb5d6f5",
+    "semantic_hash": "7e0312617fdfef87a04e53413eb5d6f5"
+  },
+  "tests/YarPhoenix.Catalog.Tests/EpubTextExtractorTests.cs": {
+    "mtime": 1783549633.351859,
+    "seen": 1794659738.7423332,
+    "ast_hash": "f6fefa4d90f17e17e6bcd721b4f3f000",
+    "semantic_hash": "f6fefa4d90f17e17e6bcd721b4f3f000"
+  },
+  "tests/YarPhoenix.Catalog.Tests/InternetArchiveTests.cs": {
+    "mtime": 1783522196.828807,
+    "seen": 1794659738.7423332,
+    "ast_hash": "800fdcda18988f28494a0b0793cef9d1",
+    "semantic_hash": "800fdcda18988f28494a0b0793cef9d1"
+  },
+  "tests/YarPhoenix.Catalog.Tests/OpenLibraryProviderTests.cs": {
+    "mtime": 1783380956.8030307,
+    "seen": 1794659738.7423332,
+    "ast_hash": "0b35225c441233a26cf9ad26c18a41e7",
+    "semantic_hash": "0b35225c441233a26cf9ad26c18a41e7"
+  },
+  "tests/YarPhoenix.Catalog.Tests/OpenLibraryQueryTests.cs": {
+    "mtime": 1783380951.1089284,
+    "seen": 1794659738.7423332,
+    "ast_hash": "5ac0c17fd153062dd4b5e1d8d1bdd152",
+    "semantic_hash": "5ac0c17fd153062dd4b5e1d8d1bdd152"
+  },
+  "tests/YarPhoenix.Catalog.Tests/StreakLogicTests.cs": {
+    "mtime": 1783425416.6931553,
+    "seen": 1794659738.7423332,
+    "ast_hash": "f00e3617a2e188fb3c65c85c128308fd",
+    "semantic_hash": "f00e3617a2e188fb3c65c85c128308fd"
+  },
+  "tests/YarPhoenix.Catalog.Tests/YarPhoenix.Catalog.Tests.csproj": {
+    "mtime": 1783442379.7410288,
+    "seen": 1794659738.7423332,
+    "ast_hash": "48e6ad46b4b0717ec4ac35cd53bc1c61",
+    "semantic_hash": "48e6ad46b4b0717ec4ac35cd53bc1c61"
+  },
+  "yarphoenix-library-api.slnx": {
+    "mtime": 1783550276.461438,
+    "seen": 1794659738.7423332,
+    "ast_hash": "3f3ffbfd0ae7b63437eb3229d133ed7f",
+    "semantic_hash": "3f3ffbfd0ae7b63437eb3229d133ed7f"
+  },
+  "CLAUDE.md": {
+    "mtime": 1794660011.908049,
+    "seen": 1794660673.1643114,
+    "ast_hash": "ce465807e4e7aef178ee797e03dcac70",
+    "semantic_hash": "ce465807e4e7aef178ee797e03dcac70"
+  },
+  "README.md": {
+    "mtime": 1794599591.263037,
+    "seen": 1794660673.1643114,
+    "ast_hash": "231c32888197bf89e21bd195cc1d64f1",
+    "semantic_hash": "231c32888197bf89e21bd195cc1d64f1"
+  },
+  "docs/DEPLOY.md": {
+    "mtime": 1794581667.172601,
+    "seen": 1794660673.1643114,
+    "ast_hash": "4d461ed8c272c16df705afed83bfa90d",
+    "semantic_hash": "4d461ed8c272c16df705afed83bfa90d"
+  }
+}
