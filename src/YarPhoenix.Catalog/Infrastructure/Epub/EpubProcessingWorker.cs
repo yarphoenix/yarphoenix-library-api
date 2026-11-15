@@ -80,86 +80,68 @@ public sealed class EpubProcessingWorker(
             book.Isbn = metadata.Isbn ?? book.Isbn;
         }
 
-        await TryMatchWithCatalogAsync(dbContext, book, cancellationToken);
+        await EnrichFromCatalogAsync(dbContext, book, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    // Best-effort мост между мирами (ТЗ §4.3): сначала ISBN, затем title+author.
-    // Матчим по каталожным записям в своей БД; не нашли — книга живёт отдельной
-    // записью только с FileId (обязательный fallback из ТЗ).
-    private async Task TryMatchWithCatalogAsync(
+    // Best-effort мост между мирами (ТЗ §4.3): сначала ISBN, затем title+author — ищем каталожную
+    // запись той же книги и берём у неё то, чего нет в самом файле: обложку, описание, год.
+    // Не нашли — книга живёт с метаданными из OPF.
+    private async Task EnrichFromCatalogAsync(
         CatalogDbContext dbContext,
         Book uploaded,
         CancellationToken cancellationToken)
     {
-        Book? candidate = null;
+        Book? catalogRecord = null;
 
         if (uploaded.Isbn is not null)
         {
-            candidate = await dbContext.Books.SingleOrDefaultAsync(
-                b => b.Id != uploaded.Id && b.ExternalId != null && b.FileId == null && b.Isbn == uploaded.Isbn,
+            catalogRecord = await dbContext.Books.AsNoTracking().FirstOrDefaultAsync(
+                b => b.Id != uploaded.Id && b.ExternalId != null && b.Isbn == uploaded.Isbn,
                 cancellationToken);
         }
 
-        if (candidate is null && uploaded.Title.Length > 0 && uploaded.Author.Length > 0)
+        if (catalogRecord is null && uploaded.Title.Length > 0 && uploaded.Author.Length > 0)
         {
             var title = uploaded.Title.ToLower();
             var author = uploaded.Author.ToLower();
-            candidate = await dbContext.Books.FirstOrDefaultAsync(
+            catalogRecord = await dbContext.Books.AsNoTracking().FirstOrDefaultAsync(
                 b => b.Id != uploaded.Id
                     && b.ExternalId != null
-                    && b.FileId == null
                     && b.Title.ToLower() == title
                     && b.Author.ToLower() == author,
                 cancellationToken);
         }
 
-        if (candidate is null)
+        if (catalogRecord is null)
         {
             return;
         }
 
-        // «Золотой случай» (§4.1): каталожная запись получает файл, дубль исчезает.
-        candidate.FileId = uploaded.FileId;
-        candidate.Isbn ??= uploaded.Isbn;
+        CopyCatalogMetadata(uploaded, catalogRecord);
+        logger.LogInformation(
+            "Uploaded book {UploadedId} took metadata from catalog record {CatalogId} ({Title})",
+            uploaded.Id,
+            catalogRecord.Id,
+            catalogRecord.Title);
+    }
 
-        var uploadedShelves = await dbContext.UserBooks
-            .Where(ub => ub.BookId == uploaded.Id)
-            .ToListAsync(cancellationToken);
-        var candidateUserIds = await dbContext.UserBooks
-            .Where(ub => ub.BookId == candidate.Id)
-            .Select(ub => ub.UserId)
-            .ToListAsync(cancellationToken);
+    // Из совпадения копируются только метаданные. Файл остаётся у личной записи загрузившего:
+    // каталожная запись общая для всех, и чужой EPUB (другое издание, перевод, чьи-то пометки)
+    // в неё попадать не должен — иначе его начинают читать все.
+    internal static void CopyCatalogMetadata(Book uploaded, Book catalogRecord)
+    {
+        uploaded.CoverId ??= catalogRecord.CoverId;
+        uploaded.FirstPublishYear ??= catalogRecord.FirstPublishYear;
 
-        foreach (var shelf in uploadedShelves)
+        if (string.IsNullOrEmpty(uploaded.Description) && !string.IsNullOrEmpty(catalogRecord.Description))
         {
-            if (candidateUserIds.Contains(shelf.UserId))
-            {
-                // У пользователя каталожная книга уже на полке — wishlist «самоисполнился» (§4.4).
-                dbContext.UserBooks.Remove(shelf);
-            }
-            else
-            {
-                dbContext.UserBooks.Remove(shelf);
-                dbContext.UserBooks.Add(new UserBook
-                {
-                    UserId = shelf.UserId,
-                    BookId = candidate.Id,
-                    Status = shelf.Status,
-                    IsFavorite = shelf.IsFavorite,
-                    CfiPosition = shelf.CfiPosition,
-                    Progress = shelf.Progress,
-                    AddedAtUtc = shelf.AddedAtUtc,
-                    LastReadAtUtc = shelf.LastReadAtUtc,
-                });
-            }
+            uploaded.Description = catalogRecord.Description;
         }
 
-        dbContext.Books.Remove(uploaded);
-        logger.LogInformation(
-            "Uploaded book {UploadedId} matched catalog record {CandidateId} ({Title})",
-            uploaded.Id,
-            candidate.Id,
-            candidate.Title);
+        if (uploaded.Subjects.Length == 0)
+        {
+            uploaded.Subjects = catalogRecord.Subjects;
+        }
     }
 }
