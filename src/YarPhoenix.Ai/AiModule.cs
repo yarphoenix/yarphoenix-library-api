@@ -1,9 +1,13 @@
 using System.Net;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
 using YarPhoenix.Ai.Application;
+using YarPhoenix.Ai.Endpoints;
 using YarPhoenix.Ai.Infrastructure;
 
 namespace YarPhoenix.Ai;
@@ -55,6 +59,20 @@ public static class AiModule
             });
 
         services.AddScoped<IReadingAssistant, ClaudeReadingAssistant>();
+
+        // Каждый вопрос ассистенту — платный вызов модели, поэтому лимит считается на пользователя
+        // (эндпоинт только для вошедших); адрес — запасной ключ на случай запроса без токена.
+        services.AddRateLimiter(options =>
+            options.AddPolicy(AssistantEndpoints.RateLimiterPolicy, httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    httpContext.User.FindFirst("sub")?.Value
+                        ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                        ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = AssistantEndpoints.RequestsPerMinute,
+                        Window = TimeSpan.FromMinutes(1),
+                    })));
 
         return services;
     }

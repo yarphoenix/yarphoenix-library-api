@@ -52,6 +52,16 @@ public sealed class MinioFileStorage(IMinioClient client, IOptions<MinioOptions>
         return buffer;
     }
 
+    public async Task CopyBookToAsync(string fileId, Stream destination, CancellationToken cancellationToken)
+    {
+        await client.GetObjectAsync(
+            new GetObjectArgs()
+                .WithBucket(_options.BooksBucket)
+                .WithObject(fileId)
+                .WithCallbackStream(async (stream, token) => await stream.CopyToAsync(destination, token)),
+            cancellationToken);
+    }
+
     public async Task DeleteBookAsync(string fileId, CancellationToken cancellationToken)
     {
         await client.RemoveObjectAsync(

@@ -1,7 +1,9 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using YarPhoenix.Ai;
 using YarPhoenix.Ai.Endpoints;
+using YarPhoenix.Api;
 using YarPhoenix.Auth;
 using YarPhoenix.Auth.Endpoints;
 using YarPhoenix.Auth.Infrastructure;
@@ -25,6 +27,17 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddProblemDetails();
+
+// В проде перед бэкендом стоит Caddy: без этих заголовков все клиенты выглядят одним адресом
+// прокси, и лимит запросов на /api/auth становится общим на всех. Список доверенных прокси
+// очищен намеренно: порт бэкенда опубликован только на loopback (docker-compose.yml), так что
+// достучаться до него может лишь Caddy из той же сети compose.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Числа в JSON — только числами. Web-дефолт допускает и строки ("42"), из-за чего OpenAPI
 // описывает каждое числовое поле как «число или строка» и типы фронтенда расплываются.
@@ -65,13 +78,17 @@ if (!EF.IsDesignTime)
     }
 }
 
+// Первым: адрес клиента и схема нужны всему, что идёт дальше.
+app.UseForwardedHeaders();
+
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
 app.UseCors(frontendCorsPolicy);
-app.UseRateLimiter();
 
+// Лимитер после аутентификации: лимит ассистента считается на пользователя, а не на адрес.
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
@@ -80,9 +97,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHealthChecks("/health");
-app.MapCatalogEndpoints();
-app.MapLibraryEndpoints();
-app.MapAuthEndpoints();
-app.MapAssistantEndpoints();
+
+// Общий корень маршрутов: фильтр обязательных полей действует на эндпоинты всех модулей.
+var api = app.MapGroup(string.Empty).AddEndpointFilter<RequiredFieldsFilter>();
+api.MapCatalogEndpoints();
+api.MapLibraryEndpoints();
+api.MapAuthEndpoints();
+api.MapAssistantEndpoints();
 
 app.Run();

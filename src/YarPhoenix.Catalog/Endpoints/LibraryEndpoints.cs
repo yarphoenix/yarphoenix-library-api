@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Net.Http.Headers;
 using YarPhoenix.Catalog.Application;
 using YarPhoenix.Catalog.Contracts;
 using YarPhoenix.Shared;
@@ -133,6 +134,7 @@ public static class LibraryEndpoints
             ClaimsPrincipal principal,
             LibraryService library,
             IFileStorage fileStorage,
+            HttpContext httpContext,
             CancellationToken cancellationToken) =>
         {
             var fileId = await library.GetFileIdAsync(principal.GetUserId(), bookId, cancellationToken);
@@ -141,8 +143,16 @@ public static class LibraryEndpoints
                 return ToErrorResult(fileId.Error);
             }
 
-            var content = await fileStorage.OpenBookAsync(fileId.Value, cancellationToken);
-            return Results.Stream(content, "application/epub+zip");
+            // Файл книги неизменен (другой файл — другой FileId), поэтому браузер может держать его
+            // в своём кэше и перепроверять по ETag. Vary: ответ зависит от того, кто спрашивает.
+            httpContext.Response.Headers.CacheControl = "private, max-age=31536000, immutable";
+            httpContext.Response.Headers.Vary = HeaderNames.Authorization;
+
+            // Поток из MinIO идёт прямо в ответ: EPUB не собирается в памяти сервера целиком.
+            return Results.Stream(
+                destination => fileStorage.CopyBookToAsync(fileId.Value, destination, httpContext.RequestAborted),
+                "application/epub+zip",
+                entityTag: new EntityTagHeaderValue($"\"{fileId.Value}\""));
         }).Produces(StatusCodes.Status200OK, contentType: "application/epub+zip");
 
         group.MapGet("/stats", async (

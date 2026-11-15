@@ -13,6 +13,9 @@ public interface IFileStorage
     // Отдаёт поток книги по FileId (контролируемая раздача из приватного бакета).
     Task<Stream> OpenBookAsync(string fileId, CancellationToken cancellationToken);
 
+    // Переливает книгу прямо в поток назначения, не собирая файл в памяти, — для отдачи читалке.
+    Task CopyBookToAsync(string fileId, Stream destination, CancellationToken cancellationToken);
+
     // Удаляет файл книги (при удалении аккаунта — книги-сироты, ТЗ §5.2.1).
     Task DeleteBookAsync(string fileId, CancellationToken cancellationToken);
 
