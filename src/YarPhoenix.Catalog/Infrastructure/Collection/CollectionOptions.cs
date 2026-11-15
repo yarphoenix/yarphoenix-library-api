@@ -10,8 +10,15 @@ public sealed class CollectionOptions
 
     public string StandardEbooksBaseUrl { get; set; } = "https://standardebooks.org";
 
-    // В конфиге, чтобы можно было переключиться на зеркало Project Gutenberg.
+    // Основной сайт Project Gutenberg: адреса вида /ebooks/{id}.epub3.images.
     public string GutenbergBaseUrl { get; set; } = "https://www.gutenberg.org";
+
+    // Официальное зеркало для автоматических загрузок: к нему обращаемся, когда основной сайт
+    // не отдал файл (он бывает недоступен целиком и отвечает 403 на любой запрос). Раскладка
+    // другая: /cache/epub/{id}/pg{id}-images-3.epub. По HTTPS зеркало не работает — у него нет
+    // сертификата на это имя, сам Gutenberg указывает его адрес с http. Пустая строка
+    // отключает зеркало.
+    public string GutenbergMirrorBaseUrl { get; set; } = "http://aleph.gutenberg.org";
 
     public int PageSize { get; set; } = 100;
 

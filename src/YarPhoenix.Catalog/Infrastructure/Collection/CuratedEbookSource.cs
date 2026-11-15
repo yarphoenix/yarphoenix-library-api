@@ -24,10 +24,18 @@ public sealed class CuratedEbookSource(
     {
         foreach (var url in BuildUrls(source, sourceRef, _options))
         {
-            var content = await TryDownloadAsync(url, cancellationToken);
-            if (content is not null)
+            try
             {
-                return content;
+                var content = await TryDownloadAsync(url, cancellationToken);
+                if (content is not null)
+                {
+                    return content;
+                }
+            }
+            catch (Exception exception) when (ProviderFailure.Is(exception, cancellationToken))
+            {
+                // Один адрес не ответил — следующий (зеркало) всё равно пробуем.
+                logger.LogWarning(exception, "Ebook source failed for {Url}", url);
             }
         }
 
@@ -36,22 +44,37 @@ public sealed class CuratedEbookSource(
 
     public async Task<Stream> DownloadCatalogFeedAsync(CancellationToken cancellationToken)
     {
-        var url = new Uri(_options.GutenbergBaseUrl.TrimEnd('/') + CatalogFeedPath);
-        using var response = await httpClient.GetAsync(
-            url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        HttpRequestException? lastFailure = null;
 
-        // Около 20 МБ: буферизуем, чтобы разбор CSV не держал сетевое соединение.
-        var buffer = new MemoryStream();
-        await response.Content.CopyToAsync(buffer, cancellationToken);
-        buffer.Position = 0;
-        return buffer;
+        foreach (var baseUrl in GutenbergBaseUrls(_options))
+        {
+            var url = new Uri(baseUrl + CatalogFeedPath);
+            try
+            {
+                using var response = await httpClient.GetAsync(
+                    url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                response.EnsureSuccessStatusCode();
+
+                // Около 20 МБ: буферизуем, чтобы разбор CSV не держал сетевое соединение.
+                var buffer = new MemoryStream();
+                await response.Content.CopyToAsync(buffer, cancellationToken);
+                buffer.Position = 0;
+                return buffer;
+            }
+            catch (HttpRequestException exception)
+            {
+                logger.LogWarning(
+                    "Gutenberg catalog feed is unavailable at {Url}: {Reason}", url, exception.Message);
+                lastFailure = exception;
+            }
+        }
+
+        throw lastFailure ?? new HttpRequestException("No Project Gutenberg address is configured.");
     }
 
     // Адреса в порядке предпочтения; следующий пробуется, если предыдущий не дал EPUB.
     internal static IReadOnlyList<Uri> BuildUrls(ReadableSource source, string sourceRef, CollectionOptions options)
     {
-        var gutenberg = options.GutenbergBaseUrl.TrimEnd('/');
         var standardEbooks = options.StandardEbooksBaseUrl.TrimEnd('/');
 
         return source switch
@@ -61,14 +84,40 @@ public sealed class CuratedEbookSource(
             [
                 new Uri($"{standardEbooks}/ebooks/{sourceRef}/downloads/{sourceRef.Replace('/', '_')}.epub?source=download"),
             ],
-            // EPUB3 с оглавлением; иллюстрированные издания бывают огромными — тогда вариант без картинок.
-            ReadableSource.Gutenberg =>
-            [
-                new Uri($"{gutenberg}/ebooks/{sourceRef}.epub3.images"),
-                new Uri($"{gutenberg}/ebooks/{sourceRef}.epub.noimages"),
-            ],
+            ReadableSource.Gutenberg => BuildGutenbergUrls(sourceRef, options),
             _ => [],
         };
+    }
+
+    // Основной сайт Project Gutenberg, затем зеркало, если оно задано.
+    internal static IReadOnlyList<string> GutenbergBaseUrls(CollectionOptions options)
+    {
+        string[] candidates = [options.GutenbergBaseUrl, options.GutenbergMirrorBaseUrl];
+        return [.. candidates.Where(url => !string.IsNullOrWhiteSpace(url)).Select(url => url.TrimEnd('/'))];
+    }
+
+    // Сначала EPUB3 с оглавлением и картинками — с основного сайта, затем с зеркала. Иллюстрированные
+    // издания бывают огромными, тогда оба пропускаются по размеру и берётся вариант без картинок.
+    // У основного сайта и зеркала разная раскладка адресов одного и того же файла.
+    private static Uri[] BuildGutenbergUrls(string id, CollectionOptions options)
+    {
+        var main = options.GutenbergBaseUrl.TrimEnd('/');
+        var mirror = options.GutenbergMirrorBaseUrl.TrimEnd('/');
+        var hasMirror = !string.IsNullOrWhiteSpace(mirror);
+
+        List<Uri> urls = [new Uri($"{main}/ebooks/{id}.epub3.images")];
+        if (hasMirror)
+        {
+            urls.Add(new Uri($"{mirror}/cache/epub/{id}/pg{id}-images-3.epub"));
+        }
+
+        urls.Add(new Uri($"{main}/ebooks/{id}.epub.noimages"));
+        if (hasMirror)
+        {
+            urls.Add(new Uri($"{mirror}/cache/epub/{id}/pg{id}.epub"));
+        }
+
+        return [.. urls];
     }
 
     // EPUB — это ZIP-архив: по сигнатуре отличаем файл от HTML-заглушки с кодом 200.
