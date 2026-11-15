@@ -108,9 +108,9 @@
     "semantic_hash": "7febedf2a0b4c12b4f689c073970ab2f"
   },
   "src/YarPhoenix.Api/appsettings.json": {
-    "mtime": 1794678057.5413854,
-    "seen": 1794693899.2081804,
-    "ast_hash": "b06e09d54efc00e6be962074039c1563",
+    "mtime": 1794762535.6413848,
+    "seen": 1794762958.8143425,
+    "ast_hash": "116d4fcb2997b3afca5e3da26db67fd6",
     "semantic_hash": ""
   },
   "src/YarPhoenix.Auth/Application/AuthService.cs": {
@@ -564,15 +564,15 @@
     "semantic_hash": "3f3ffbfd0ae7b63437eb3229d133ed7f"
   },
   "CLAUDE.md": {
-    "mtime": 1794693313.3166742,
-    "seen": 1794693899.2081804,
-    "ast_hash": "52581b513750a624197d25e633632359",
+    "mtime": 1794762944.3894167,
+    "seen": 1794762958.815854,
+    "ast_hash": "3e15fa50a6f6284eec7ea7504245bb1b",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1794693267.0554633,
-    "seen": 1794693899.2081804,
-    "ast_hash": "e51d7f227056b8372ae86ac99bcfa5a2",
+    "mtime": 1794762942.1558938,
+    "seen": 1794762958.815854,
+    "ast_hash": "b9e112825d3e873fb10fb6c640b1adbf",
     "semantic_hash": ""
   },
   "docs/DEPLOY.md": {
@@ -618,9 +618,9 @@
     "semantic_hash": ""
   },
   "src/YarPhoenix.Catalog/Infrastructure/Collection/CollectionOptions.cs": {
-    "mtime": 1794677159.2711778,
-    "seen": 1794693899.2081804,
-    "ast_hash": "8c8551c755ec63671984b07d37b2dd9d",
+    "mtime": 1794762530.8536117,
+    "seen": 1794762958.815348,
+    "ast_hash": "5c082a39374e1ba10cce7278a2e69879",
     "semantic_hash": ""
   },
   "src/YarPhoenix.Catalog/Infrastructure/Collection/CsvReader.cs": {
@@ -630,9 +630,9 @@
     "semantic_hash": ""
   },
   "src/YarPhoenix.Catalog/Infrastructure/Collection/CuratedEbookSource.cs": {
-    "mtime": 1794677497.4244597,
-    "seen": 1794693899.2081804,
-    "ast_hash": "fe19e6925c31e15cbc5aa8c84b7cf51b",
+    "mtime": 1794762532.966529,
+    "seen": 1794762958.815348,
+    "ast_hash": "6cc4613c72b740c7f3622057095fe3e9",
     "semantic_hash": ""
   },
   "src/YarPhoenix.Catalog/Infrastructure/Collection/GutenbergCatalog.cs": {
@@ -702,9 +702,9 @@
     "semantic_hash": ""
   },
   "tests/YarPhoenix.Catalog.Tests/CuratedEbookSourceTests.cs": {
-    "mtime": 1794677890.3449192,
-    "seen": 1794693899.2081804,
-    "ast_hash": "5081b99baa2e08c93d7092e9ac771a7a",
+    "mtime": 1794762794.7658043,
+    "seen": 1794762958.815854,
+    "ast_hash": "3d26d182989389d456ead516051fa7d2",
     "semantic_hash": ""
   },
   "tests/YarPhoenix.Catalog.Tests/GutenbergCatalogTests.cs": {

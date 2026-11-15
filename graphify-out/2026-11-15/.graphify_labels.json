@@ -1,1 +1,21 @@
-{"0": "Core Services & Endpoints", "1": "AI Prompt Templates & Tests", "2": "NuGet Package Manifest", "3": "Docker Compose Config", "4": "CI/CD Workflow", "5": "Open Library Client", "6": "EPUB Text Extraction", "7": "Backend Docker Services", "8": "Internet Archive Client", "9": "Auth Contracts", "10": "Project References & Packages", "11": "Auth Migrations", "12": "Auth Project Dependencies", "13": "Catalog Project Dependencies", "14": "EF Core Migrations Infra", "15": "Endpoint Mapping", "16": "Claude API Client", "17": "Book Search Contracts", "18": "Book Entity", "19": "Host Package Dependencies", "20": "Token & Public Domain Whitelist", "21": "Public Domain Source", "22": "UserBook Entity", "23": "Reading Assistant Contracts", "24": "Catalog DbContext & Achievements", "25": "AI Module Registration", "26": "Email & Dev Seeder", "27": "DevUserSeeder Tests", "28": "Refresh Token Entity", "29": "Launch Settings", "30": "Auth DbContext", "31": "Claude Reading Assistant", "32": "Reading Context Builder", "33": "Auth Refresh Tests"}
+{
+  "2": "NuGet Package Manifest",
+  "4": "CI/CD Workflow",
+  "5": "Open Library Client",
+  "6": "EPUB Text Extraction",
+  "9": "Auth Contracts",
+  "10": "Project References & Packages",
+  "12": "Auth Project Dependencies",
+  "13": "Catalog Project Dependencies",
+  "15": "Endpoint Mapping",
+  "16": "Claude API Client",
+  "17": "Book Search Contracts",
+  "18": "Book Entity",
+  "19": "Host Package Dependencies",
+  "22": "UserBook Entity",
+  "25": "AI Module Registration",
+  "26": "Email & Dev Seeder",
+  "27": "DevUserSeeder Tests",
+  "28": "Refresh Token Entity",
+  "32": "Reading Context Builder"
+}
