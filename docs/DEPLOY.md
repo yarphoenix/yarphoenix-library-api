@@ -36,8 +36,9 @@ cp .env.example .env
 - `FRONTEND_ORIGIN=https://<username>.github.io` — для CORS.
 - `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `EMAIL_FROM` — если нужны AI и письма
   (иначе обе фичи мягко деградируют).
-- `EGRESS_PROXY` — если провайдер VPS блокирует archive.org / api.anthropic.com,
-  укажите egress-прокси `http://user:pass@host:port` (§5.1.2, §8).
+- `EGRESS_PROXY` — если провайдер VPS блокирует openlibrary.org, gutenberg.org,
+  standardebooks.org или api.anthropic.com, укажите egress-прокси
+  `http://user:pass@host:port` (§8). Без доступа к первым трём не соберётся читаемая коллекция.
 - `BACKEND_IMAGE` — оставьте пустым, если собираете образ на VPS; для деплоя из CI
   укажите образ из GHCR (раздел 5).
 
@@ -54,6 +55,11 @@ docker compose --profile prod up -d --build
 curl -fsS https://<API_DOMAIN>/health          # 200
 curl -fsS https://<API_DOMAIN>/api/catalog/books?pageSize=1   # список книг
 ```
+
+Сразу после первого запуска список пуст: читаемую коллекцию собирает фоновый импорт
+(несколько минут, около 1 900 книг). Прогресс виден в логах —
+`docker compose logs -f backend | grep "Readable collection"`; книги появляются в каталоге по
+мере импорта. Импорт повторяется раз в неделю и после перезапуска продолжает с места остановки.
 
 Первый запрос по HTTPS может занять секунды — Caddy получает сертификат.
 
@@ -86,9 +92,10 @@ curl -fsS https://<API_DOMAIN>/api/catalog/books?pageSize=1   # список к�
   иначе браузер их заблокирует.
 - **Аватар** — загрузите в настройках; картинка должна открываться по
   `https://<API_DOMAIN>/avatars/...` (Caddy → MinIO).
-- **PD-книга** — откройте классику (напр. Достоевский), нажмите «Читать»: бэкенд
-  скачает EPUB с Internet Archive в MinIO (нужен доступ к archive.org — при блокировке
-  задайте `EGRESS_PROXY`).
+- **Книга коллекции** — откройте любую книгу с главной (напр. «Pride and Prejudice»), нажмите
+  «Читать»: бэкенд за несколько секунд скачает EPUB из Standard Ebooks или Project Gutenberg
+  в MinIO (нужен доступ к этим сайтам — при блокировке задайте `EGRESS_PROXY`). Если источник
+  недоступен, ответ — 503, и повторное «Читать» попробует снова.
 
 ---
 

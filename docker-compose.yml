@@ -29,7 +29,8 @@ services:
       # Почтовый провайдер (Resend). Пусто → dev-режим со ссылками в лог.
       Email__ApiKey: ${RESEND_API_KEY:-}
       Email__From: ${EMAIL_FROM:-YarPhoenix Library <onboarding@resend.dev>}
-      # Egress-прокси: archive.org И api.anthropic.com блокируются с RU-IP (§8, §5.1.2).
+      # Egress-прокси: openlibrary.org и api.anthropic.com блокируются с RU-IP (§8); через него же
+      # идут источники читаемой коллекции — gutenberg.org и standardebooks.org.
       # NO_PROXY обязателен для внутренних адресов, иначе Postgres/MinIO пойдут через прокси.
       HTTP_PROXY: ${EGRESS_PROXY:-}
       HTTPS_PROXY: ${EGRESS_PROXY:-}

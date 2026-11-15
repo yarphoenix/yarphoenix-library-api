@@ -12,7 +12,7 @@
 
 ```
 src/YarPhoenix.Api       хост: DI-регистрация модулей, CORS, rate limiter, healthcheck, миграции на старте
-src/YarPhoenix.Catalog   ДОМЕННОЕ ЯДРО: Book, UserBook, полки, прогресс/CFI, стрик, ачивки, Open Library, матчинг
+src/YarPhoenix.Catalog   ДОМЕННОЕ ЯДРО: Book, UserBook, полки, прогресс/CFI, стрик, ачивки, Open Library, читаемая коллекция
 src/YarPhoenix.Auth      ASP.NET Core Identity + JWT + refresh-ротация, профиль
 src/YarPhoenix.Storage   MinIO: приватный бакет books (+ публичный avatars — в планах), загрузка EPUB
 src/YarPhoenix.Ai        IReadingAssistant: роутинг моделей, сборка промпта, Claude Messages API
@@ -42,6 +42,9 @@ dotnet ef migrations add <Name> --project src/YarPhoenix.Auth --startup-project 
   Из него фронтенд генерирует типы: `npm run gen:api` в репозитории фронтенда.
 - **У каждого эндпоинта с телом ответа обязателен `.Produces<T>()`** (для 204/404 — `.Produces(код)`):
   лямбды возвращают `IResult`, и без метаданных тип ответа в схему не попадёт.
+- Обязательные поля тел запросов — то, что объявлено в `*Request` без `?`: `RequiredFieldsFilter`
+  (на корневой группе маршрутов в `Program.cs`) отвечает 400 с именем поля. Необязательное поле
+  объявлять nullable, иначе запрос без него перестанет проходить.
 - После изменения контрактов (`*Contracts.cs`, маршруты, параметры) — перегенерировать типы на фронтенде
   и закоммитить `schema.d.ts` вместе с изменением.
 - Числа в JSON — строго числами (`JsonNumberHandling.Strict` в `Program.cs`): иначе схема описывает
@@ -56,8 +59,10 @@ dotnet ef migrations add <Name> --project src/YarPhoenix.Auth --startup-project 
   (`DevUserSeeder`, секция `DevSeed`); в Production сидер не вызывается.
 - MinIO: 127.0.0.1:9000 (консоль 9001). Секреты compose — в `.env` (gitignored, образец `.env.example`).
 - VPN/прокси включён всегда (`HTTP(S)_PROXY=127.0.0.1:10809`); `HttpClient` подхватывает env-прокси сам.
-  **openlibrary.org и archive.org заблокированы провайдером** — без прокси недоступны; на VPS в РФ
-  понадобится egress-прокси (задать HTTPS_PROXY в compose).
+  **openlibrary.org заблокирован провайдером** — без прокси недоступен; через тот же прокси ходят
+  gutenberg.org и standardebooks.org. На VPS в РФ понадобится egress-прокси (задать HTTPS_PROXY в compose).
+- Фоновый импорт коллекции стартует вместе с API и ходит в сеть (Open Library + каталог Gutenberg,
+  несколько минут). Для офлайн-работы и отладки без сети: `Collection__ImportEnabled=false`.
 - Для оффлайн-разработки каталога есть заглушка Open Library:
   `OpenLibrary__BaseUrl=http://localhost:5090 dotnet run ...` (стаб-сервер лежал в scratchpad сессии —
   при необходимости пересоздать: простой JSON-сервер с форматом /search.json).
@@ -67,10 +72,26 @@ dotnet ef migrations add <Name> --project src/YarPhoenix.Auth --startup-project 
 
 - **Два мира (§1.1)**: каталог (мир A) = метаданные Open Library, витрина/вишлист; читалка и AI
   (мир B) работают **только при наличии файла** (`Book.FileId` в MinIO). «Текст открывает AI»,
-  а не полка. Мосты между мирами: матчинг загруженного EPUB (§4.3, best-effort по ISBN→title+author)
-  и `ocaid` у записей OL.
+  а не полка. Мост между мирами — читаемая коллекция (ниже).
 - **Book (§4.1)**: одна сущность; внешняя запись уникальна по паре `(Provider, ExternalId)` —
-  не по ExternalId в одиночку. Provider: OpenLibrary | InternetArchive.
+  не по ExternalId в одиночку. Откуда у книги текст — `ReadableSource`
+  (None | StandardEbooks | Gutenberg | Upload) + `SourceRef`.
+- **Читаемая коллекция** (решение владельца, **сознательное отступление от ТЗ §5.1.2** — там слот
+  файлов = Internet Archive; не возвращать): `Book.InCollection` — книги с вычитанным EPUB из
+  Standard Ebooks / Project Gutenberg, найденные по `id_standard_ebooks` / `id_project_gutenberg`
+  в Open Library. Собирает `ReadableCollectionImporter` (при пустой коллекции, далее раз в неделю;
+  возобновляемый, upsert по `(Provider, ExternalId)`). В коллекцию попадает только: английский
+  текст, название + автор + обложка, общественное достояние по `PublicDomainRule` (все создатели
+  издания умерли ≥ 75 лет назад; год неизвестен → пропуск, кроме `PublicDomainWhitelist`).
+  `GET /api/catalog/books` по умолчанию отдаёт коллекцию из Postgres, `scope=all` — живой Open
+  Library; язык интерфейса выдачу **не** фильтрует. Файл качается лениво по «Читать»
+  (`CuratedEbookSource`) под блокировкой по книге (`BookFileLocks`); сбой источника — 503, не 500.
+- **Файл пользователя — только его (K1)**: загруженный EPUB никогда не прикрепляется к общей
+  каталожной записи. Матчинг (§4.3, ISBN → title+author) копирует из каталога лишь метаданные
+  (`EpubProcessingWorker.CopyCatalogMetadata`); `FileId` остаётся у личной записи.
+- **Гигиена данных Open Library**: обложки `<= 0` → null, описания чистятся (`OpenLibraryText`),
+  темы — без машинных тегов вроде `series:Harry_Potter` (`OpenLibrarySubjects`), пользовательский
+  текст экранируется в Solr-запросе. Чистим на бэкенде — на фронтенде фильтры не дублировать.
 - **UserBook (§4.2)**: Status (WantToRead|Reading|Read) + отдельный флаг IsFavorite (не enum!);
   CFI-позиция хранится тут; «Читать» делает upsert в Reading (§4.4) — отдельного «добавить» не нужно.
 - **Стрик (§4.5)**: мягкий, O(1) (CurrentStreak/LongestStreak/LastActiveDate, день — по таймзоне
@@ -88,6 +109,7 @@ dotnet ef migrations add <Name> --project src/YarPhoenix.Auth --startup-project 
 | Postgres | `ConnectionStrings:Postgres` | контейнер, порт 5433 |
 | MinIO | секция `Minio` | контейнер 9000/9001 |
 | Open Library | `OpenLibrary:BaseUrl` | реальный или стаб :5090 |
+| Standard Ebooks / Project Gutenberg | секция `Collection` (базовые URL, `ImportEnabled`, `MaxFileBytes`) | реальные; `ImportEnabled=false` — без фонового импорта |
 | Claude API | `Anthropic:ApiKey` (+ модели Haiku/Sonnet) | без ключа — мягкая деградация ассистента |
 | Email | пока `LoggingAuthEmailSender` (ссылки в лог) | реальный провайдер — в планах |
 | JWT | `Jwt:Secret` ≥ 32 символов (fail fast на старте) | dev-секрет в user-secrets |
