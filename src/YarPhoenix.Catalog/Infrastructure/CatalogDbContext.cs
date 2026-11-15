@@ -13,10 +13,15 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
 
     public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
 
+    public DbSet<CollectionImportState> CollectionImportStates => Set<CollectionImportState>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         // Своя схема на модуль — граница модульного монолита на уровне БД (ТЗ §3.1).
         builder.HasDefaultSchema("catalog");
+
+        // Триграммы — для поиска по подстроке в названии и авторе коллекции (ILIKE '%…%').
+        builder.HasPostgresExtension("pg_trgm");
 
         builder.Entity<Book>(entity =>
         {
@@ -27,6 +32,8 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             entity.Property(b => b.Isbn).HasMaxLength(20);
             entity.Property(b => b.Language).HasMaxLength(8);
             entity.Property(b => b.Provider).HasConversion<string>().HasMaxLength(32);
+            entity.Property(b => b.ReadableSource).HasConversion<string>().HasMaxLength(32);
+            entity.Property(b => b.SourceRef).HasMaxLength(256);
 
             // Композитный ключ внешней записи (ТЗ §4.1): id разных провайдеров
             // могут случайно совпасть.
@@ -34,6 +41,22 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
                 .HasIndex(b => new { b.Provider, b.ExternalId })
                 .IsUnique()
                 .HasFilter("\"Provider\" IS NOT NULL AND \"ExternalId\" IS NOT NULL");
+
+            // Витрина коллекции: «самые издаваемые сначала» читается прямо из индекса.
+            entity
+                .HasIndex(b => b.Popularity)
+                .IsDescending()
+                .HasFilter("\"InCollection\"");
+
+            entity.HasIndex(b => b.Genres).HasMethod("gin");
+            entity.HasIndex(b => b.Title).HasMethod("gin").HasOperators("gin_trgm_ops");
+            entity.HasIndex(b => b.Author).HasMethod("gin").HasOperators("gin_trgm_ops");
+        });
+
+        builder.Entity<CollectionImportState>(entity =>
+        {
+            // Строка одна, ключ задаёт код — автоинкремент не нужен.
+            entity.Property(s => s.Id).ValueGeneratedNever();
         });
 
         builder.Entity<UserBook>(entity =>

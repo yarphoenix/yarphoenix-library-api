@@ -45,6 +45,21 @@ public sealed class OpenLibraryQueryTests
         Assert.Equal("dune", result);
     }
 
+    [Theory]
+    [InlineData("C++", @"C\+\+")]
+    [InlineData("1984: a novel", @"1984\: a novel")]
+    [InlineData("\"unclosed quote", "\\\"unclosed quote")]
+    [InlineData("self-help", @"self\-help")]
+    [InlineData("war AND peace OR love", "war and peace or love")]
+    public void Build_EscapesUserText(string text, string expected)
+    {
+        var query = new BookSearchQuery(1, 24, text, null, null);
+
+        var result = OpenLibraryQuery.Build(query);
+
+        Assert.Equal(expected, result);
+    }
+
     [Fact]
     public void Build_QuotesMultiWordSubjects()
     {

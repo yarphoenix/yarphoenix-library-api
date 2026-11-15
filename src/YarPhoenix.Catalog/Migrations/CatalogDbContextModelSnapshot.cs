@@ -21,6 +21,7 @@ namespace YarPhoenix.Catalog.Migrations
                 .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pg_trgm");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("YarPhoenix.Catalog.Domain.Book", b =>
@@ -47,12 +48,22 @@ namespace YarPhoenix.Catalog.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<int?>("FallbackGutenbergId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("FileId")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
                     b.Property<int?>("FirstPublishYear")
                         .HasColumnType("integer");
+
+                    b.PrimitiveCollection<string[]>("Genres")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<bool>("InCollection")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Isbn")
                         .HasMaxLength(20)
@@ -62,9 +73,25 @@ namespace YarPhoenix.Catalog.Migrations
                         .HasMaxLength(8)
                         .HasColumnType("character varying(8)");
 
+                    b.Property<int>("Popularity")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Provider")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ReadableSource")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SourceRef")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.PrimitiveCollection<string[]>("Subjects")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -73,11 +100,45 @@ namespace YarPhoenix.Catalog.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Author");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Author"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Author"), new[] { "gin_trgm_ops" });
+
+                    b.HasIndex("Genres");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Genres"), "gin");
+
+                    b.HasIndex("Popularity")
+                        .IsDescending()
+                        .HasFilter("\"InCollection\"");
+
+                    b.HasIndex("Title");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Title"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Title"), new[] { "gin_trgm_ops" });
+
                     b.HasIndex("Provider", "ExternalId")
                         .IsUnique()
                         .HasFilter("\"Provider\" IS NOT NULL AND \"ExternalId\" IS NOT NULL");
 
                     b.ToTable("Books", "catalog");
+                });
+
+            modelBuilder.Entity("YarPhoenix.Catalog.Domain.CollectionImportState", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("LastCompletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("NextPage")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CollectionImportStates", "catalog");
                 });
 
             modelBuilder.Entity("YarPhoenix.Catalog.Domain.ReaderProfile", b =>

@@ -1,10 +1,17 @@
 namespace YarPhoenix.Catalog.Application;
 
-// Кандидат на «золотой случай» (ТЗ §4.1, provider kinship): Open Library-запись
-// PD-книги несёт идентификаторы Internet Archive (ocaid) — родной мост каталог → файл
-// без сопоставления по названию. Список, а не один id: у одной работы бывает
-// несколько сканов (часть — lending или мусорные google-скан-EPUB), перебираем по порядку.
-public sealed record PublicDomainCandidate(IReadOnlyList<string> Identifiers, string Author);
+// Работа Open Library, у которой есть готовое электронное издание (ТЗ §4.1, родство
+// провайдеров): идентификаторы Standard Ebooks и Project Gutenberg — мост «каталог → файл»
+// без сопоставления по названию.
+public sealed record ReadableWork(
+    string ExternalId,
+    string Title,
+    IReadOnlyList<string> Authors,
+    int? CoverId,
+    int? FirstPublishYear,
+    IReadOnlyList<string> Subjects,
+    int EditionCount,
+    IReadOnlyList<string> StandardEbooksIds,
+    IReadOnlyList<int> GutenbergIds);
 
-// Открытый (не lending) файл на Internet Archive, готовый к скачиванию в MinIO.
-public sealed record PublicDomainFile(string Identifier, string FileName, long Size);
+public sealed record ReadableWorksPage(IReadOnlyList<ReadableWork> Works, int Total);

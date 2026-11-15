@@ -36,6 +36,24 @@ public sealed class OpenLibraryProviderTests
     }
 
     [Theory]
+    [InlineData(12707846, 12707846)]
+    [InlineData(-1, null)]
+    [InlineData(0, null)]
+    [InlineData(null, null)]
+    public void NormalizeCover_TreatsPlaceholderIdsAsMissing(int? coverId, int? expected)
+    {
+        Assert.Equal(expected, OpenLibraryProvider.NormalizeCover(coverId));
+    }
+
+    [Fact]
+    public void ParseGutenbergIds_KeepsDistinctPositiveNumbers()
+    {
+        string[] ids = ["19033", "11", "19033", "not-a-number", "0", "928"];
+
+        Assert.Equal([19033, 11, 928], OpenLibraryProvider.ParseGutenbergIds(ids));
+    }
+
+    [Theory]
     [InlineData("1869", 1869)]
     [InlineData("January 1, 1869", 1869)]
     [InlineData(null, null)]

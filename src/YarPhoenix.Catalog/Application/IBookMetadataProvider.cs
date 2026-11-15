@@ -10,9 +10,10 @@ public interface IBookMetadataProvider
 
     Task<BookDetailsResponse?> GetDetailsAsync(string externalId, CancellationToken cancellationToken);
 
-    // Родство провайдеров (ТЗ §4.1): по OL-записи узнаём, есть ли открытый скан
-    // на Internet Archive и его ocaid-идентификаторы. null → не PD-читаемая работа.
-    Task<PublicDomainCandidate?> FindPublicDomainCandidateAsync(
-        string externalId,
+    // Родство провайдеров (ТЗ §4.1): работы, у которых есть издание в Standard Ebooks или
+    // Project Gutenberg, — сырьё для «читаемой коллекции». Самые издаваемые идут первыми.
+    Task<ReadableWorksPage> ListReadableWorksAsync(
+        int page,
+        int pageSize,
         CancellationToken cancellationToken);
 }

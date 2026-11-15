@@ -30,17 +30,20 @@ internal sealed class OpenLibraryDoc
     [JsonPropertyName("first_publish_year")]
     public int? FirstPublishYear { get; set; }
 
-    // Идентификаторы Internet Archive у работы — родной мост к PD-файлу (ТЗ §4.1).
-    [JsonPropertyName("ia")]
-    public List<string>? Ia { get; set; }
+    [JsonPropertyName("subject")]
+    public List<string>? Subjects { get; set; }
 
-    // Открытый скан (не lending) — первичный сигнал PD-читаемости.
-    [JsonPropertyName("public_scan_b")]
-    public bool PublicScan { get; set; }
+    [JsonPropertyName("edition_count")]
+    public int EditionCount { get; set; }
 
-    // "public" | "borrowable" | "no_ebook" — подтверждение открытого доступа.
-    [JsonPropertyName("ebook_access")]
-    public string? EbookAccess { get; set; }
+    // Номера книг Project Gutenberg у работы; у одной работы их бывает несколько
+    // (переводы, тома, переиздания) и встречаются повторы.
+    [JsonPropertyName("id_project_gutenberg")]
+    public List<string>? GutenbergIds { get; set; }
+
+    // Slug издания Standard Ebooks: "jane-austen/pride-and-prejudice".
+    [JsonPropertyName("id_standard_ebooks")]
+    public List<string>? StandardEbooksIds { get; set; }
 }
 
 internal sealed class OpenLibraryWork
@@ -52,8 +55,9 @@ internal sealed class OpenLibraryWork
     [JsonPropertyName("description")]
     public JsonElement? Description { get; set; }
 
+    // Встречаются -1 и null на месте удалённых обложек.
     [JsonPropertyName("covers")]
-    public List<int>? Covers { get; set; }
+    public List<int?>? Covers { get; set; }
 
     [JsonPropertyName("subjects")]
     public List<string>? Subjects { get; set; }

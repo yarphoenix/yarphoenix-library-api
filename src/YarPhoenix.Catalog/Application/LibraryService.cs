@@ -1,4 +1,6 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using YarPhoenix.Catalog.Contracts;
 using YarPhoenix.Catalog.Domain;
 using YarPhoenix.Catalog.Infrastructure;
@@ -11,8 +13,14 @@ public sealed class LibraryService(
     CatalogDbContext dbContext,
     IBookMetadataProvider metadataProvider,
     IPublicDomainSource publicDomainSource,
-    IFileStorage fileStorage)
+    IFileStorage fileStorage,
+    BookFileLocks fileLocks,
+    ILogger<LibraryService> logger)
 {
+    // Потолок на скачивание файла: пользователь ждёт ответа на «Читать», и минута ожидания
+    // хуже честного «попробуйте позже».
+    private static readonly TimeSpan FileFetchTimeout = TimeSpan.FromSeconds(90);
+
     public async Task<IReadOnlyList<LibraryBookResponse>> GetShelfAsync(
         Guid userId,
         string shelf,
@@ -57,7 +65,17 @@ public sealed class LibraryService(
 
         if (book is null)
         {
-            var details = await metadataProvider.GetDetailsAsync(request.ExternalId, cancellationToken);
+            BookDetailsResponse? details;
+            try
+            {
+                details = await metadataProvider.GetDetailsAsync(request.ExternalId, cancellationToken);
+            }
+            catch (Exception exception) when (ProviderFailure.Is(exception, cancellationToken))
+            {
+                return Result.Failure<LibraryBookResponse>(
+                    Error.Unavailable("Book catalog is temporarily unavailable."));
+            }
+
             if (details is null)
             {
                 return Result.Failure<LibraryBookResponse>(Error.NotFound("Book was not found."));
@@ -98,10 +116,9 @@ public sealed class LibraryService(
         return Result.Success(ToResponse(userBook));
     }
 
-    // «Читать» для PD-книги без файла (ТЗ §5.1.2, §4.4): ленивый ингест с Internet
-    // Archive в «золотой случай» — та же строка Book получает FileId, Provider
-    // остаётся OpenLibrary (родство провайдеров, §4.1). Скачиваем один раз: далее
-    // FileId уже стоит и IA не дёргается.
+    // «Читать» (ТЗ §4.4): у книги читаемой коллекции файл появляется при первом открытии — он
+    // лениво скачивается из Standard Ebooks или Project Gutenberg и дальше живёт в MinIO, так что
+    // источник дёргается один раз. Книгу вне коллекции без файла читать нельзя.
     public async Task<Result<LibraryBookResponse>> EnsureReadableAsync(
         Guid userId,
         StartReadingRequest request,
@@ -112,36 +129,29 @@ public sealed class LibraryService(
             return Result.Failure<LibraryBookResponse>(Error.Validation("Unknown provider."));
         }
 
+        // Один «Читать» на книгу за раз: параллельный запрос дождётся первого и увидит готовый
+        // файл и полку, а не начнёт вторую загрузку и не упадёт на уникальном ключе.
+        using var bookLock = await fileLocks.AcquireAsync(
+            $"{provider}:{request.ExternalId}", cancellationToken);
+
         var book = await dbContext.Books.SingleOrDefaultAsync(
             b => b.Provider == provider && b.ExternalId == request.ExternalId,
             cancellationToken);
 
-        if (book is null || book.FileId is null)
+        if (book is null || (book.FileId is null && !book.InCollection))
         {
-            var ingest = await IngestPublicDomainFileAsync(request.ExternalId, cancellationToken);
-            if (ingest.IsFailure)
+            return Result.Failure<LibraryBookResponse>(Error.Validation("This book has no readable file yet."));
+        }
+
+        if (book.FileId is null)
+        {
+            var file = await FetchCollectionFileAsync(book, cancellationToken);
+            if (file.IsFailure)
             {
-                return Result.Failure<LibraryBookResponse>(ingest.Error);
+                return Result.Failure<LibraryBookResponse>(file.Error);
             }
 
-            if (book is null)
-            {
-                var details = await metadataProvider.GetDetailsAsync(request.ExternalId, cancellationToken);
-                book = new Book
-                {
-                    Id = Guid.NewGuid(),
-                    Provider = provider,
-                    ExternalId = request.ExternalId,
-                    Title = details?.Title ?? string.Empty,
-                    Author = details?.Author ?? string.Empty,
-                    CoverId = details?.CoverId,
-                    Description = details?.Description,
-                    FirstPublishYear = details?.FirstPublishYear,
-                };
-                dbContext.Books.Add(book);
-            }
-
-            book.FileId = ingest.Value;
+            book.FileId = file.Value;
         }
 
         var userBook = await dbContext.UserBooks.SingleOrDefaultAsync(
@@ -172,42 +182,69 @@ public sealed class LibraryService(
         return Result.Success(ToResponse(userBook));
     }
 
-    // Резолвим ocaid по OL, применяем вайтлист (авторитетная проверка §5.1.2),
-    // перебираем сканы (часть — lending или мусорные google-скан-EPUB) и первый
-    // открытый EPUB кладём в MinIO. Возвращаем FileId.
-    private async Task<Result<string>> IngestPublicDomainFileAsync(
-        string externalId,
-        CancellationToken cancellationToken)
+    // Скачивает файл книги коллекции из её источника и кладёт в MinIO. Возвращает FileId.
+    // Любой сбой источника — Unavailable (503), а не исключение: книга остаётся без файла,
+    // и следующее «Читать» попробует снова.
+    private async Task<Result<string>> FetchCollectionFileAsync(Book book, CancellationToken cancellationToken)
     {
-        var candidate = await metadataProvider.FindPublicDomainCandidateAsync(externalId, cancellationToken);
-        if (candidate is null || !PublicDomainWhitelist.IsAllowed(candidate.Author))
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(FileFetchTimeout);
+
+        try
         {
-            return Result.Failure<string>(Error.Validation("This book has no readable file yet."));
+            await using var content = await DownloadFromSourceAsync(book, timeout.Token);
+            if (content is null)
+            {
+                logger.LogWarning(
+                    "No file for book {BookId} at {Source} ({SourceRef})",
+                    book.Id,
+                    book.ReadableSource,
+                    book.SourceRef);
+                return Result.Failure<string>(Error.Unavailable("The book file is not available right now."));
+            }
+
+            var fileId = await fileStorage.UploadBookAsync(
+                content, content.Length, "application/epub+zip", timeout.Token);
+            return Result.Success(fileId);
+        }
+        catch (Exception exception) when (ProviderFailure.Is(exception, cancellationToken))
+        {
+            logger.LogWarning(
+                exception,
+                "Could not fetch the file for book {BookId} from {Source}",
+                book.Id,
+                book.ReadableSource);
+            return Result.Failure<string>(Error.Unavailable("The book file is not available right now."));
+        }
+    }
+
+    private async Task<Stream?> DownloadFromSourceAsync(Book book, CancellationToken cancellationToken)
+    {
+        if (book.SourceRef is null
+            || book.ReadableSource is not (ReadableSource.StandardEbooks or ReadableSource.Gutenberg))
+        {
+            return null;
         }
 
-        PublicDomainFile? file = null;
-        foreach (var identifier in candidate.Identifiers.Take(5))
+        var content = await publicDomainSource.DownloadAsync(
+            book.ReadableSource, book.SourceRef, cancellationToken);
+
+        if (content is null && book is { ReadableSource: ReadableSource.StandardEbooks, FallbackGutenbergId: { } id })
         {
-            file = await publicDomainSource.ResolveFileAsync(identifier, cancellationToken);
-            if (file is not null)
+            var gutenbergRef = id.ToString(CultureInfo.InvariantCulture);
+            content = await publicDomainSource.DownloadAsync(
+                ReadableSource.Gutenberg, gutenbergRef, cancellationToken);
+
+            if (content is not null)
             {
-                break;
+                // Источник книги описывает то, что на самом деле лежит в хранилище.
+                book.ReadableSource = ReadableSource.Gutenberg;
+                book.SourceRef = gutenbergRef;
+                book.FallbackGutenbergId = null;
             }
         }
 
-        if (file is null)
-        {
-            return Result.Failure<string>(
-                Error.Unavailable("The public-domain file is not available right now."));
-        }
-
-        await using var content = await publicDomainSource.DownloadAsync(
-            file.Identifier, file.FileName, cancellationToken);
-
-        var fileId = await fileStorage.UploadBookAsync(
-            content, content.Length, "application/epub+zip", cancellationToken);
-
-        return Result.Success(fileId);
+        return content;
     }
 
     public async Task<LibraryBookResponse?> LookupAsync(
@@ -389,6 +426,7 @@ public sealed class LibraryService(
         {
             Id = Guid.NewGuid(),
             FileId = fileId,
+            ReadableSource = ReadableSource.Upload,
             Title = Path.GetFileNameWithoutExtension(fileName),
         };
 

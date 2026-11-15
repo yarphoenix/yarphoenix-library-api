@@ -22,14 +22,21 @@ public static class CatalogEndpoints
             int pageSize = 24,
             string? q = null,
             string? genre = null,
-            string? lang = null) =>
+            string? lang = null,
+            string? scope = null) =>
         {
+            // scope=all — живой поиск по всему Open Library; иначе — читаемая коллекция.
+            var catalogScope = string.Equals(scope, "all", StringComparison.OrdinalIgnoreCase)
+                ? CatalogScope.All
+                : CatalogScope.Collection;
+
             var query = new BookSearchQuery(
                 Math.Max(page, 1),
                 Math.Clamp(pageSize, 1, MaxPageSize),
                 q,
                 genre,
-                lang);
+                lang,
+                catalogScope);
 
             var result = await catalog.SearchAsync(query, cancellationToken);
             return result.IsSuccess

@@ -1,11 +1,13 @@
+using System.Text;
+using System.Text.RegularExpressions;
 using YarPhoenix.Catalog.Application;
 
 namespace YarPhoenix.Catalog.Infrastructure.OpenLibrary;
 
-internal static class OpenLibraryQuery
+internal static partial class OpenLibraryQuery
 {
     // Ключи жанров каталога → subject-термины Open Library.
-    private static readonly Dictionary<string, string> GenreSubjects = new()
+    internal static readonly Dictionary<string, string> GenreSubjects = new()
     {
         ["scifi"] = "\"science fiction\"",
         ["fantasy"] = "fantasy",
@@ -26,13 +28,16 @@ internal static class OpenLibraryQuery
         ["en"] = "eng",
     };
 
+    // Символы с особым смыслом в запросе Solr (Lucene).
+    private const string SpecialCharacters = "+-&|!(){}[]^\"~*?:\\/";
+
     public static string Build(BookSearchQuery query)
     {
         var parts = new List<string>();
 
         if (!string.IsNullOrWhiteSpace(query.Text))
         {
-            parts.Add(query.Text.Trim());
+            parts.Add(EscapeUserText(query.Text.Trim()));
         }
 
         if (query.Genre is not null && GenreSubjects.TryGetValue(query.Genre, out var subject))
@@ -53,4 +58,26 @@ internal static class OpenLibraryQuery
 
         return string.Join(" AND ", parts);
     }
+
+    // Текст из строки поиска — не язык запросов. Без экранирования «C++», «1984: роман» или
+    // незакрытая кавычка дают ошибку Open Library либо неожиданную выборку, а слова AND/OR/NOT
+    // работают как операторы.
+    internal static string EscapeUserText(string text)
+    {
+        var builder = new StringBuilder(text.Length + 8);
+        foreach (var character in text)
+        {
+            if (SpecialCharacters.Contains(character))
+            {
+                builder.Append('\\');
+            }
+
+            builder.Append(character);
+        }
+
+        return OperatorRegex().Replace(builder.ToString(), match => match.Value.ToLowerInvariant());
+    }
+
+    [GeneratedRegex(@"\b(AND|OR|NOT)\b")]
+    private static partial Regex OperatorRegex();
 }

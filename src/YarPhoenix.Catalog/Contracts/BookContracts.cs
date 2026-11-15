@@ -6,7 +6,9 @@ public sealed record BookSummaryResponse(
     string Title,
     string Author,
     int? CoverId,
-    int? FirstPublishYear);
+    int? FirstPublishYear,
+    // Книга входит в читаемую коллекцию: у неё есть текст, «Читать» сработает.
+    bool IsReadable);
 
 public sealed record BookListResponse(
     IReadOnlyList<BookSummaryResponse> Items,
@@ -25,5 +27,6 @@ public sealed record BookDetailsResponse(
     int? FirstPublishYear,
     IReadOnlyList<string> Subjects,
     bool HasReadableFile,
-    // PD-книга: файла ещё нет, но его можно подтянуть с Internet Archive по «Читать» (ТЗ §5.1.2).
+    // Книга читаемой коллекции: файла может ещё не быть, но «Читать» подтянет его из
+    // Standard Ebooks или Project Gutenberg.
     bool IsPublicDomain);

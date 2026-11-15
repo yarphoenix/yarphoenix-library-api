@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -13,6 +14,15 @@ public sealed partial class OpenLibraryProvider(HttpClient httpClient) : IBookMe
 
     private const string SearchFields = "key,title,author_name,cover_i,first_publish_year";
 
+    private const string ReadableWorksQuery = "id_standard_ebooks:* OR id_project_gutenberg:*";
+
+    private const string ReadableWorksFields =
+        "key,title,author_name,cover_i,first_publish_year,subject,edition_count,"
+        + "id_project_gutenberg,id_standard_ebooks";
+
+    // Сколько тем показывается на странице книги.
+    private const int DetailsSubjects = 6;
+
     public async Task<BookListResponse> SearchAsync(
         BookSearchQuery query,
         CancellationToken cancellationToken)
@@ -23,14 +33,19 @@ public sealed partial class OpenLibraryProvider(HttpClient httpClient) : IBookMe
         var response = await httpClient.GetFromJsonAsync<OpenLibrarySearchResponse>(url, cancellationToken)
             ?? new OpenLibrarySearchResponse();
 
+        // Запись без автора и без обложки — заготовка, а не книга: на витрине это пустая карточка.
+        // Страница из-за этого может оказаться короче PageSize; Total остаётся числом Open Library.
         var items = response.Docs
+            .Where(doc => doc.AuthorNames is { Count: > 0 } || NormalizeCover(doc.CoverId) is not null)
             .Select(doc => new BookSummaryResponse(
                 ProviderName,
                 ExtractId(doc.Key),
                 doc.Title,
-                doc.AuthorNames is { Count: > 0 } ? string.Join(", ", doc.AuthorNames.Take(2)) : string.Empty,
-                doc.CoverId,
-                doc.FirstPublishYear))
+                JoinAuthors(doc.AuthorNames),
+                NormalizeCover(doc.CoverId),
+                doc.FirstPublishYear,
+                // Читаемость знает только наша БД — её проставляет сервисный слой.
+                IsReadable: false))
             .ToList();
 
         var totalPages = (int)Math.Ceiling(response.NumFound / (double)query.PageSize);
@@ -61,37 +76,43 @@ public sealed partial class OpenLibraryProvider(HttpClient httpClient) : IBookMe
             externalId,
             work.Title,
             author,
-            work.Covers is { Count: > 0 } ? work.Covers[0] : null,
-            ExtractDescription(work.Description),
+            // На месте удалённых обложек Open Library оставляет -1 или null.
+            work.Covers?.FirstOrDefault(cover => cover > 0),
+            OpenLibraryText.CleanDescription(ExtractDescription(work.Description)),
             ExtractYear(work.FirstPublishDate),
-            work.Subjects?.Take(6).ToList() ?? [],
+            OpenLibrarySubjects.Clean(work.Subjects, DetailsSubjects),
             HasReadableFile: false,
-            // Политику PD (вайтлист) применяет сервисный слой — провайдер лишь фактограф.
+            // Читаемость и статус коллекции определяет сервисный слой — провайдер лишь фактограф.
             IsPublicDomain: false);
     }
 
-    public async Task<PublicDomainCandidate?> FindPublicDomainCandidateAsync(
-        string externalId,
+    public async Task<ReadableWorksPage> ListReadableWorksAsync(
+        int page,
+        int pageSize,
         CancellationToken cancellationToken)
     {
-        // Поиск по ключу работы: одним запросом узнаём ocaid-идентификаторы и флаг
-        // открытого скана (в Works API их нет — они на уровне поискового индекса).
-        var q = Uri.EscapeDataString($"key:/works/{externalId}");
-        var url = $"/search.json?q={q}&fields=ia,public_scan_b,ebook_access,author_name&limit=1";
+        // sort=editions: порядок стабилен от страницы к странице, а самые издаваемые книги
+        // попадают в коллекцию первыми — витрина полезна ещё до конца импорта.
+        var q = Uri.EscapeDataString(ReadableWorksQuery);
+        var url = $"/search.json?q={q}&page={page}&limit={pageSize}&sort=editions&fields={ReadableWorksFields}";
 
-        var response = await httpClient.GetFromJsonAsync<OpenLibrarySearchResponse>(url, cancellationToken);
-        var doc = response?.Docs.FirstOrDefault();
+        var response = await httpClient.GetFromJsonAsync<OpenLibrarySearchResponse>(url, cancellationToken)
+            ?? new OpenLibrarySearchResponse();
 
-        if (doc is null
-            || !doc.PublicScan
-            || !string.Equals(doc.EbookAccess, "public", StringComparison.Ordinal)
-            || doc.Ia is not { Count: > 0 })
-        {
-            return null;
-        }
+        var works = response.Docs
+            .Select(doc => new ReadableWork(
+                ExtractId(doc.Key),
+                doc.Title,
+                doc.AuthorNames ?? [],
+                NormalizeCover(doc.CoverId),
+                doc.FirstPublishYear,
+                doc.Subjects ?? [],
+                doc.EditionCount,
+                doc.StandardEbooksIds ?? [],
+                ParseGutenbergIds(doc.GutenbergIds)))
+            .ToList();
 
-        var author = doc.AuthorNames is { Count: > 0 } ? doc.AuthorNames[0] : string.Empty;
-        return new PublicDomainCandidate(doc.Ia, author);
+        return new ReadableWorksPage(works, response.NumFound);
     }
 
     private async Task<string> GetFirstAuthorNameAsync(OpenLibraryWork work, CancellationToken cancellationToken)
@@ -115,6 +136,28 @@ public sealed partial class OpenLibraryProvider(HttpClient httpClient) : IBookMe
     internal static string ExtractId(string workKey) =>
         workKey.StartsWith("/works/", StringComparison.Ordinal) ? workKey["/works/".Length..] : workKey;
 
+    internal static string JoinAuthors(IReadOnlyList<string>? authors) =>
+        authors is { Count: > 0 } ? string.Join(", ", authors.Take(2)) : string.Empty;
+
+    // cover_i / covers[] у записей без обложки бывают -1 или 0: такой id даёт битую картинку.
+    internal static int? NormalizeCover(int? coverId) => coverId > 0 ? coverId : null;
+
+    internal static List<int> ParseGutenbergIds(IEnumerable<string>? ids)
+    {
+        var result = new List<int>();
+        foreach (var raw in ids ?? [])
+        {
+            if (int.TryParse(raw, NumberStyles.None, CultureInfo.InvariantCulture, out var id)
+                && id > 0
+                && !result.Contains(id))
+            {
+                result.Add(id);
+            }
+        }
+
+        return result;
+    }
+
     // description бывает и строкой, и объектом {"value": "..."} — нормализуем.
     internal static string? ExtractDescription(JsonElement? description) =>
         description switch
@@ -134,7 +177,7 @@ public sealed partial class OpenLibraryProvider(HttpClient httpClient) : IBookMe
         }
 
         var match = YearRegex().Match(firstPublishDate);
-        return match.Success ? int.Parse(match.Value) : null;
+        return match.Success ? int.Parse(match.Value, CultureInfo.InvariantCulture) : null;
     }
 
     [GeneratedRegex(@"\d{4}")]
