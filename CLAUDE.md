@@ -109,7 +109,7 @@ dotnet ef migrations add <Name> --project src/YarPhoenix.Auth --startup-project 
 | Postgres | `ConnectionStrings:Postgres` | контейнер, порт 5433 |
 | MinIO | секция `Minio` | контейнер 9000/9001 |
 | Open Library | `OpenLibrary:BaseUrl` | реальный или стаб :5090 |
-| Standard Ebooks / Project Gutenberg | секция `Collection` (базовые URL, `ImportEnabled`, `MaxFileBytes`) | реальные; `ImportEnabled=false` — без фонового импорта |
+| Standard Ebooks / Project Gutenberg | секция `Collection` (базовые URL, `GutenbergMirrorBaseUrl` — зеркало на случай отказа основного сайта, `ImportEnabled`, `MaxFileBytes`) | реальные; `ImportEnabled=false` — без фонового импорта |
 | Claude API | `Anthropic:ApiKey` (+ модели Haiku/Sonnet) | без ключа — мягкая деградация ассистента |
 | Email | пока `LoggingAuthEmailSender` (ссылки в лог) | реальный провайдер — в планах |
 | JWT | `Jwt:Secret` ≥ 32 символов (fail fast на старте) | dev-секрет в user-secrets |
